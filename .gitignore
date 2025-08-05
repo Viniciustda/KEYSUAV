@@ -1,0 +1,21 @@
+# Arquivos de compilação do Waf e logs
+/build/
+/.sconsign.lock
+*.log
+
+# Arquivos compilados e bibliotecas
+*.o
+*.so
+*.pyc
+*.pyo
+*.a
+
+# Arquivos de backup de editores
+*~
+*.swp
+
+# Arquivos de IDEs
+.vscode/
+.idea/
+*.suo
+*.user

@@ -1,0 +1,3 @@
+time	IPTx	msgTag	message
+64.4091	192.168.1.17	1	Identification
+392.401	192.168.1.17	1	Identification

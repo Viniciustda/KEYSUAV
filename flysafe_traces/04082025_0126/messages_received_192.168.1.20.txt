@@ -1,0 +1,5 @@
+time	IPTx	msgTag	message
+43.8038	192.168.1.17	1	Identification
+44.2001	192.168.1.17	2	Trap
+45.2001	192.168.1.17	2	Trap
+46.2001	192.168.1.17	2	Trap

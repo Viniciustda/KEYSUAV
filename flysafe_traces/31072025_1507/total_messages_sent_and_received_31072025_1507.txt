@@ -1,0 +1,9 @@
+type           	sent	received
+Broadcasts     	32220	990
+Identification 	990	866
+Trap           	16932	14335
+SpecialId      	0	0
+SuspNeighbors  	0	0
+BlockedNeighbor	0	0
+SuspReduction  	0	0
+Total          	50142	16191

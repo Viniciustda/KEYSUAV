@@ -1,0 +1,4 @@
+time	IPTx	msgTag	message
+1146.2	192.168.1.2	0	Hello
+1147.21	192.168.1.2	2	Trap
+1148.2	192.168.1.2	2	Trap

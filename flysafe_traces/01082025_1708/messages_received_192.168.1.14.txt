@@ -1,0 +1,3 @@
+time	IPTx	msgTag	message
+146.602	192.168.1.4	0	Hello
+146.61	192.168.1.4	1	Identification

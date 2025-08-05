@@ -1,0 +1,2 @@
+time	nNeighs	AvgError	MinError	MaxError	Errors
+605.401	1	0.010.02	0.01	0.01	0.01

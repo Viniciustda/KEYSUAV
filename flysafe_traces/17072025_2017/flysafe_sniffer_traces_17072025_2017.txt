@@ -1,0 +1,4 @@
+time	snifferIP	senderIP	receiverIP	msgTag	message	attachedNeighborList
+762.003	192.168.1.29	0.29.0.0	0.0.0.36	2	Sniffed: Trap	
+762.003	192.168.1.29	0.29.0.0	0.0.0.36	2	Sniffed: Trap	
+762.003	192.168.1.29	0.29.0.0	0.0.0.36	1	Sniffed: Identification	
