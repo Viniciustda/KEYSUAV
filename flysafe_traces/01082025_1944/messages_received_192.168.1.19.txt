@@ -1,2 +1,0 @@
-time	IPTx	msgTag	message
-119.401	192.168.1.3	0	Hello

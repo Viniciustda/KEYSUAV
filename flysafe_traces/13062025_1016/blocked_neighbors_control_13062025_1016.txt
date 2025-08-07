@@ -1,2 +1,0 @@
-NodeIP	MaliciousIP	MaliciousState	tSuspicious	tBlocked	AvgTime
-192.168.1.1	192.168.1.5	1	980.801	986.804	6.00355

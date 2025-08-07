@@ -1,5 +1,0 @@
-time	IPTx	msgTag	message
-1169.6	192.168.1.14	0	Hello
-1169.6	192.168.1.14	1	Identification
-1170.6	192.168.1.14	2	Trap
-1171.6	192.168.1.14	2	Trap
