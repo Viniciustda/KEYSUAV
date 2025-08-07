@@ -1,10 +1,10 @@
 # 1. Ignorar tudo por padrão
 *
 
-# 2. Não ignorar este próprio arquivo .gitignore
+# 2. Manter arquivos importantes da raiz
 !.gitignore
-# Manter o README
 !README.md
+!wscript
 
 # 3. Exceções: Manter os diretórios e arquivos do seu projeto
 
