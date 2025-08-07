@@ -1,7 +1,7 @@
 # 1. Ignorar tudo por padrão
 *
 
-# 2. NÃO ignorar este próprio arquivo .gitignore
+# 2. Não ignorar este próprio arquivo .gitignore
 !.gitignore
 # Manter o README
 !README.md
@@ -9,25 +9,23 @@
 # 3. Exceções: Manter os diretórios e arquivos do seu projeto
 
 # Manter todo o conteúdo da pasta de traces
-!flysafe_traces/
+!/flysafe_traces/
+!/flysafe_traces/**
 
 # Manter módulo flysafe dentro de src/
-!src/
-src/*
-!src/flysafe/
+!/src/
+!/src/flysafe/
+!/src/flysafe/**
 
 # Manter os arquivos do core do ns-3 modificados
-!src/network/
-src/network/*
-!src/network/model/
-src/network/model/*
-!src/network/model/node.h
-!src/network/model/node.cc
+!/src/network/
+!/src/network/model/
+!/src/network/model/node.h
+!/src/network/model/node.cc
 
 # Manter seu script de simulação em scratch/
-!scratch/
-scratch/*
-!scratch/flysafe.cc
+!/scratch/
+!/scratch/flysafe.cc
 
 
 # 4. Adicionar os ignores genéricos 
