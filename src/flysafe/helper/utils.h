@@ -18,12 +18,14 @@
 #include "ns3/simulator.h"
 #include "ns3/flysafe-tag.h"
 
+#include "ns3/adhoc-wifi-mac.h"
 #include "ns3/ipv4-header.h"
 #include "ns3/llc-snap-header.h"
 #include "ns3/udp-header.h"
 #include "ns3/udp-socket-factory.h"
 #include "ns3/wifi-mac-header.h"
 #include "ns3/wifi-mac-trailer.h" 
+#include "ns3/wifi-net-device.h"
 #include "ns3/wifi-phy.h"
 
 using namespace std;

@@ -497,7 +497,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
   */
   if (!malicious.empty()) { 
       
-      NS_LOG_INFO("FlySafe - Configuring " << malicious.size() << " designated malicious node(s) as sniffer(s)");
+      NS_LOG_INFO("FlySafe - Configuring " << malicious.size() << " designated malicious node(s) as sniffer(s) ...");
       cout << endl;
       for (int snifferNodeId : malicious) {
         

@@ -1,0 +1,6 @@
+time	NLSize	nPsbNeigh	nNeighCIdent	Error
+710.601	0	2	0	2	0
+711.601	1	2	1	1	0
+716.601	1	2	1	1	0
+718.601	1	2	1	1	0
+719.601	1	2	1	1	0

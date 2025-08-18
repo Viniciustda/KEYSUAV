@@ -240,29 +240,28 @@ ExecuteMiMAttack(Ptr<Node> snifferNode, Ptr<const Packet> packet,
                 MyTag originalTag, Vector senderPosition) {
 
     // Copy the original packet to create a forged packet
-    Ptr<Packet> packetCopy = packet->Copy();
+    Ptr<Packet> forgedPacket = packet->Copy();
 
     // Remove the original headers from the forged packet
     WifiMacHeader wifiMacHeader;
-    packetCopy->RemoveHeader(wifiMacHeader);
+    forgedPacket->RemoveHeader(wifiMacHeader);
 
-    if (wifiMacHeader.IsData()) {
-        LlcSnapHeader llcSnapHeader;
-        packetCopy->RemoveHeader(llcSnapHeader);
+    LlcSnapHeader llcSnapHeader;
+    bool hasLlc = forgedPacket->PeekHeader(llcSnapHeader);
+    if (hasLlc) {
+        forgedPacket->RemoveHeader(llcSnapHeader);
+    } else {
+        llcSnapHeader.SetType(0x0800); // Default type for IPv4
     }
 
     Ipv4Header ipv4Header;
-    packetCopy->RemoveHeader(ipv4Header);
+    forgedPacket->RemoveHeader(ipv4Header);
     
     UdpHeader udpHeader;
-    packetCopy->RemoveHeader(udpHeader);
-    uint16_t originalDestinationPort = udpHeader.GetDestinationPort();
+    forgedPacket->RemoveHeader(udpHeader);
 
     WifiMacTrailer trailer;
-    packetCopy->RemoveTrailer(trailer);
-
-    // Create a new packet with the original data
-    Ptr<Packet> forgedPacket = packetCopy->Copy();
+    forgedPacket->RemoveTrailer(trailer);
 
     // Generate false location
     Vector forgedPosition = GenerateFalseLocation();
@@ -272,18 +271,37 @@ ExecuteMiMAttack(Ptr<Node> snifferNode, Ptr<const Packet> packet,
     forgedTag.SetPosition(forgedPosition); 
     forgedPacket->ReplacePacketTag(forgedTag); 
 
-    // Create a  new socket to send the forged packet
-    Ptr<Socket> spoofSocket = Socket::CreateSocket(snifferNode, UdpSocketFactory::GetTypeId());
+    // Find the sniffer's wifinetdevice
+    Ptr<WifiNetDevice> snifferDevice = nullptr;
+    for (uint32_t i = 0; i < snifferNode->GetNDevices(); ++i) {
+        Ptr<NetDevice> device = snifferNode->GetDevice(i);
+        snifferDevice = DynamicCast<WifiNetDevice>(device);
+        if (snifferDevice) {
+            break;
+        }
+    }
 
-    // Bind the socket to the original sender's IP
-    spoofSocket->Bind(InetSocketAddress(senderIp, originalDestinationPort));
+    // Get the MAC layer of the sniffer device
+    Ptr<AdhocWifiMac> mac = DynamicCast<AdhocWifiMac>(snifferDevice->GetMac());
+    NS_ASSERT(mac != nullptr);
 
-    // Conect the socket to the receiver's IP
-    spoofSocket->Connect(InetSocketAddress(receiverIp, originalDestinationPort));
+    // Set the forged packet's headers
+    forgedPacket->AddHeader(udpHeader);
+    forgedPacket->AddHeader(ipv4Header);
+    forgedPacket->AddHeader(llcSnapHeader);
 
-    // Send the forged packet with the new location and original sender's IP
-    spoofSocket->Send(forgedPacket);
-    spoofSocket->Close();
+    // Set the forged MAC header
+    WifiMacHeader forgedHdr;
+    forgedHdr.SetType(WIFI_MAC_DATA);  
+    forgedHdr.SetAddr1(wifiMacHeader.GetAddr1());
+    forgedHdr.SetAddr2(wifiMacHeader.GetAddr2());
+    forgedHdr.SetAddr3(wifiMacHeader.GetAddr3()); 
+    forgedHdr.SetDsNotFrom();
+    forgedHdr.SetDsNotTo();
+    forgedHdr.SetNoRetry(); 
+
+    // Enqueue the forged packet with the forged MAC header
+    mac->GetTxop()->Queue(forgedPacket, forgedHdr);
 
     // Print the MiM attack information
     double timeNow = Simulator::Now().GetSeconds();
