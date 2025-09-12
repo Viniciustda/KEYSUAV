@@ -1,0 +1,6 @@
+time	IPTx	msgTag	message
+272.804	192.168.1.17	1	Identification
+273.2	192.168.1.17	2	Trap
+274.2	192.168.1.17	2	Trap
+275.2	192.168.1.17	2	Trap
+429.801	192.168.1.17	1	Identification

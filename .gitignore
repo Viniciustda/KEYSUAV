@@ -26,6 +26,8 @@
 # Manter seu script de simulação em scratch/
 !/scratch/
 !/scratch/flysafe.cc
+!/scratch/drone_image.png
+!/scratch/malicious_image.png
 
 
 # 4. Adicionar os ignores genéricos 

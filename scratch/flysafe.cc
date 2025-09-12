@@ -521,6 +521,15 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
 
   //Network Animation using NetAnim.
   AnimationInterface anim("flysafe.xml");
+  uint32_t droneRes = anim.AddResource ("../ns-3.34/scratch/drone_image.png");
+  uint32_t maliciousRes = anim.AddResource ("../ns-3.34/scratch/malicious_image.png");
+  for (uint32_t i = 0; i < Nodes.GetN (); ++i) {
+    anim.UpdateNodeImage (Nodes.Get(i)->GetId (), droneRes);
+    anim.UpdateNodeSize  (Nodes.Get(i)->GetId (), 75, 75);
+  }
+  for (int snifferNodeId : malicious) {
+    anim.UpdateNodeImage (Nodes.Get(snifferNodeId)->GetId (), maliciousRes);
+  }
 
 
   //----------------------------------------------------------------------------------
