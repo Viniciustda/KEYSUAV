@@ -16,12 +16,11 @@ TEMP_FILE="_traceFiles_$$"
 #: <<'COMMENT0'
 IPFile="spatial_no_awareness_192.168.1.*"
 
-# MODIFICAÇÃO 2: O comando 'find' agora busca APENAS dentro da pasta alvo
+# MODIFICAÇÃO 2: O comando 'find' agora busca apenas dentro da pasta alvo
 find "$TARGET_DIR" -name $IPFile  > $TEMP_FILE
 
 cat $TEMP_FILE | while read line
 do
-	# O resto deste bloco (análise Rx e Tx) permanece o mesmo do script original...
 	dateTime=${line:2:13}
 	fileLength=${#line}
 	if [ $fileLength == "52" ]; then
@@ -110,12 +109,11 @@ done
 #***************************************************************************************************
 noAwareFile="spatial_no_awareness_192.168.1.*"
 
-# MODIFICAÇÃO 3: O comando 'find' aqui também busca APENAS dentro da pasta alvo
+# MODIFICAÇÃO 3: O comando 'find' aqui também busca apenas dentro da pasta alvo
 find "$TARGET_DIR" -name $noAwareFile  > $TEMP_FILE
 
 cat $TEMP_FILE | while read line
 do
-	# O resto deste bloco (resumo dos dados) permanece o mesmo do script original...
 	dateTime=${line:2:13}
 	fileLength=${#line}
 	if [ $fileLength == "52" ]; then

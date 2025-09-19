@@ -9,8 +9,7 @@
 # Este script foi projetado para ser chamado em paralelo pelo
 # '14-1_run_parallel_14-vinicius.sh'.
 #
-# Baseado no script original '14_roundsKeepAwarenessNodeAnalysis.sh' e
-# otimizado com as mesmas técnicas do '13-2_parallel_worker-vinicius.sh'.
+# Baseado no script original '14_roundsKeepAwarenessNodeAnalysis.sh' 
 # -----------------------------------------------------------------------------
 
 # MODIFICAÇÃO 1: Validar se o nome da pasta foi passado como argumento
@@ -26,7 +25,7 @@ TEMP_FILE="_traceFiles_$$"
 #: <<'COMMENT0'
 IPFile="spatial_awareness_192.168.1.*"
 
-# MODIFICAÇÃO 2: O comando 'find' agora busca APENAS dentro da pasta alvo
+# MODIFICAÇÃO 2: O comando 'find' agora busca apenas dentro da pasta alvo
 find "$TARGET_DIR" -name $IPFile > $TEMP_FILE
 
 cat $TEMP_FILE | while read line # get each file of one specific node
@@ -58,7 +57,6 @@ do
 		endTime=$(echo $fileLine | cut -d ' ' -f 2)
 		rxFile="./"$dateTime"/messages_received_192.168.1."$nodeNumber".txt"
 		
-        # Otimização: ler o arquivo de mensagens apenas uma vez
         if [ -f "$rxFile" ]; then
             tail -n +2 "$rxFile" | while read -r rxFileLine; do
                 rxTime=$(echo $rxFileLine | cut -d ' ' -f 1)
@@ -102,7 +100,6 @@ do
 		endTime=$(echo $fileLine | cut -d ' ' -f 2)
 		txFile="./"$dateTime"/messages_sent_192.168.1."$nodeNumber".txt"
 		
-        # Otimização: ler o arquivo de mensagens apenas uma vez
         if [ -f "$txFile" ]; then
             tail -n +2 "$txFile" | while read -r txFileLine; do
                 txTime=$(echo $txFileLine | cut -d ' ' -f 1)
@@ -140,7 +137,7 @@ done
 #***************************************************************************************************
 noAwareFile="spatial_awareness_192.168.1.*"
 
-# MODIFICAÇÃO 3: O comando 'find' aqui também busca APENAS dentro da pasta alvo
+# MODIFICAÇÃO 3: O comando 'find' aqui também busca apenas dentro da pasta alvo
 find "$TARGET_DIR" -name $noAwareFile > $TEMP_FILE
 
 cat $TEMP_FILE | while read line # get each file of one specific node

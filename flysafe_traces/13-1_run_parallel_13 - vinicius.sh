@@ -6,7 +6,7 @@ echo "Iniciando a execução paralela da etapa 13 (versão corrigida)..."
 N_CORES=$(nproc)
 echo "Utilizando até $N_CORES núcleos de CPU em paralelo."
 
-# O nome do nosso novo script "worker"
+# O nome do novo script "worker"
 WORKER_SCRIPT="13-2_parallel_worker-vinicius.sh"
 
 # Encontra as subpastas de simulação e as envia para o xargs
