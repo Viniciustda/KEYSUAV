@@ -1,2 +1,0 @@
-time		snifferIP		senderIP		receiverIP		senderPosition		msgTag		message		senderNeighborList
-464.4		192.168.1.20		192.168.1.18		192.168.1.10		(992.135, 515, 91)		2		Update location (Trap message)		192.168.1.10 : x: 979.711 y: 584.313 z: 91 hop: 1

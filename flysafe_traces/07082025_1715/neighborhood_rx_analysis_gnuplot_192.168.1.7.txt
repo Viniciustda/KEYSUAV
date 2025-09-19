@@ -1,6 +1,0 @@
-time	NLSize	nPsbNeigh	nNeighCIdent	Error	Aware
-710.601	1	1	1	0	1
-711.601	1	1	1	0	1
-716.601	1	1	1	0	1
-718.601	1	1	1	0	1
-719.601	1	1	1	0	1

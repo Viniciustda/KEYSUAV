@@ -1,0 +1,8 @@
+sTime	eTime	dur	nMsg	nBroad	nId	nTrap
+315.4	315.411	.011	1	0	1	0
+322.4	322.401	.001	1	0	1	0
+1023.4	1023.4	0	1	0	1	0
+sTime	eTime	dur	nMsg	nBroad	nId	nTrap
+315.4	315.411	.011	1	0	1	0
+322.4	322.401	.001	1	0	1	0
+1023.4	1023.4	0	1	0	1	0

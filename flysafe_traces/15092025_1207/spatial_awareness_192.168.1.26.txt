@@ -1,0 +1,3 @@
+startTime	endTime	duration	awareness
+0	1052	1052	1
+1052	1199	147	1

@@ -1,2 +1,0 @@
-timeTX	timeRX	delay(ms)	IPTX
-1199.6	1199.6	0.773319	192.168.1.4

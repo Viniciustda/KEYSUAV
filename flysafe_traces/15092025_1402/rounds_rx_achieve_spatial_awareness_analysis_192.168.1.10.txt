@@ -1,0 +1,4 @@
+sTime	eTime	dur	nMsg	nBroad	nId	nTrap
+644.8	644.811	.011	1	0	1	0
+sTime	eTime	dur	nMsg	nBroad	nId	nTrap
+644.8	644.811	.011	1	0	1	0

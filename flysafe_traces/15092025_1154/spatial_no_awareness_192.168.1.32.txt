@@ -1,0 +1,4 @@
+startTime	endTime	duration	awareness
+663.2	663.201	.001	0
+927.2	927.201	.001	0
+941.2	941.201	.001	0

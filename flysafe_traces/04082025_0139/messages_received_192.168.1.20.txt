@@ -1,3 +1,0 @@
-time	IPTx	msgTag	message
-408.802	192.168.1.15	0	Hello
-408.805	192.168.1.15	1	Identification

@@ -1,0 +1,1 @@
+sTime	eTime	dur	nMsg	nBroad	nId	nTrap

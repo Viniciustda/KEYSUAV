@@ -1,0 +1,3 @@
+sTime	eTime	dur	nMsg	nBroad	nId	nTrap
+273	273.002	.002	1	0	1	0
+415	415.001	.001	1	0	1	0

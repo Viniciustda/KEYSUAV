@@ -1,0 +1,10 @@
+Description	max	min	mean	stdDev
+Sent msgs	0	0	0.0	0.0
+Sent broad	0	0	0.0	0.0
+Sent Ident	0	0	0.0	0.0
+Sent Trap	0	0	0.0	0.0
+Recv msgs	0	0	0.0	0.0
+Recv broad	0	0	0.0	0.0
+Recv Ident	0	0	0.0	0.0
+Recv Trap	0	0	0.0	0.0
+Total msgs	0	0	0.0	0.0
