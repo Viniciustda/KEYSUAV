@@ -7,7 +7,7 @@ N_CORES=$(nproc)
 echo "Utilizando até $N_CORES núcleos de CPU em paralelo."
 
 # O nome do novo script "worker"
-WORKER_SCRIPT="14-2_parallel_worker-vinicius.sh"
+WORKER_SCRIPT="14-2_parallelRoundsKeepAwarenessNodeAnalysis.sh"
 
 # Encontra as subpastas de simulação e as envia para o xargs
 find . -maxdepth 1 -type d -name '*_*' | xargs -P $N_CORES -I {} bash -c "
