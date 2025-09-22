@@ -145,11 +145,13 @@ convertIPVectorToString(const std::vector<ns3::Ipv4Address>& vec);
  * @param receiverIp - IP address of the receiver node
  * @param receivedTag - Tag containing the original position and other information
  * @param senderPosition - Position of the sender node
- */                       
+ */ 
+class Statistics;                      
 void
-ExecuteMiMAttack(Ptr<Node> snifferNode, Ptr<const Packet> packet, 
+ExecuteMiMAttack(Statistics* stats, Ptr<Node> snifferNode, Ptr<const Packet> packet, 
                 Ipv4Address snifferIp, Ipv4Address senderIp, Ipv4Address receiverIp, 
-                MyTag originalTag, Vector senderPosition);
+                MyTag originalTag, Vector senderPosition, int msgTag, 
+                vector<ns3::MyTag::NeighborFull> neighList, double messageTime);
 
 /**
  * @author Vinicius - MiM
@@ -170,7 +172,6 @@ ExecuteMiMAttack(Ptr<Node> snifferNode, Ptr<const Packet> packet,
  * @param snr - SignalNoiseDbm object containing signal and noise information
  * @param staId - Station ID
  */
-class Statistics;
 void
 ProcessSniffedPacket(Statistics* stats, Ptr<Node> snifferNode,
                        std::string context, Ptr<const Packet> packet,

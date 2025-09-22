@@ -235,9 +235,10 @@ convertIPVectorToString(const std::vector<ns3::Ipv4Address>& vec) {
  * @param senderPosition - Position of the sender node
  */
 void
-ExecuteMiMAttack(Ptr<Node> snifferNode, Ptr<const Packet> packet, 
+ExecuteMiMAttack(Statistics* stats, Ptr<Node> snifferNode, Ptr<const Packet> packet, 
                 Ipv4Address snifferIp, Ipv4Address senderIp, Ipv4Address receiverIp, 
-                MyTag originalTag, Vector senderPosition) {
+                MyTag originalTag, Vector senderPosition, int msgTag, 
+                vector<ns3::MyTag::NeighborFull> neighList, double messageTime) {
 
     // Copy the original packet to create a forged packet
     Ptr<Packet> forgedPacket = packet->Copy();
@@ -309,6 +310,10 @@ ExecuteMiMAttack(Ptr<Node> snifferNode, Ptr<const Packet> packet,
             << ". Original Sender: " << senderIp << " - Real position: (" << senderPosition.x << ", " 
             << senderPosition.y << ", " << senderPosition.z << ") - " << "Fake position: (" 
             << forgedPosition.x << ", " << forgedPosition.y << ", " << forgedPosition.z << ")" << endl << endl;
+    
+    // Call the statistics callback with the information of the forged packet
+    stats->MiMCallback("", timeNow, senderPosition, snifferIp, senderIp, receiverIp, 
+                            msgTag, neighList, messageTime);
 
 }
 
@@ -423,14 +428,15 @@ ProcessSniffedPacket(Statistics* stats, Ptr<Node> snifferNode,
 
                 // Call the statistics callback with the extracted information
                 stats->SnifferCallback("", timeNow, senderPosition, snifferIp, senderIp, receiverIp, 
-                                      msgTag, messageContent, neighborListForStats, messageTime);
+                                      msgTag, neighborListForStats, messageTime);
 
                 // Checks if sender and receiver are in the sniffer's coverage area
                 if (snifferNode->IsAlreadyNeighbor(senderIp) && snifferNode->IsAlreadyNeighbor(receiverIp))
                 {
-                    ExecuteMiMAttack(snifferNode, packet, 
+                    ExecuteMiMAttack(stats, snifferNode, packet, 
                                     snifferIp, senderIp, receiverIp, 
-                                    originalTag, senderPosition);
+                                    originalTag, senderPosition,
+                                    msgTag, neighborListForStats, messageTime);
                 }
             } 
         }        

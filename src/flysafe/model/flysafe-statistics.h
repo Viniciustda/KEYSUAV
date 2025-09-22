@@ -53,8 +53,13 @@ public:
   // Vinicius - MiM - Jul 16, 2025 - Callback for packet sniffer
   void SnifferCallback(string path, double timeNow, Vector senderPosition, 
                         Ipv4Address snifferIp, Ipv4Address senderIp, Ipv4Address receiverIp,
-                        int msgTag, string message, 
-                        vector<ns3::MyTag::NeighborFull> neighList, 
+                        int msgTag, vector<ns3::MyTag::NeighborFull> neighList, 
+                        double messageTime);
+
+  // Vinicius - MiM - Sep 22, 2025 - Callback for MiM attack
+  void MiMCallback(string path, double timeNow, Vector senderPosition, 
+                        Ipv4Address snifferIp, Ipv4Address senderIp, Ipv4Address receiverIp,
+                        int msgTag, vector<ns3::MyTag::NeighborFull> neighList, 
                         double messageTime);
 
   /**

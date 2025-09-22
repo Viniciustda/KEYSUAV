@@ -1248,7 +1248,7 @@ Statistics::EvaluateNeighborhood(Ipv4Address nodeIP, vector<ns3::MyTag::Neighbor
 
 /**
  * @author Vinicius - MiM
- * @brief Statistics of FlySafePacketSink Application - Sniffer Callback
+ * @brief Statistics of captured packets - Sniffer Callback
  * @note This callback is used to log sniffed packets information from sniffer nodes.
  * @date Jul 16, 2025  
  * 
@@ -1259,14 +1259,12 @@ Statistics::EvaluateNeighborhood(Ipv4Address nodeIP, vector<ns3::MyTag::Neighbor
  * @param senderIp IP address of the sender node
  * @param receiverIp IP address of the receiver node
  * @param msgTag Message tag of the packet
- * @param message Content of the message
  * @param neighList List of neighbor nodes with their information
  * @param messageTime Time when the message was sent
  */
 void Statistics::SnifferCallback(string path, double timeNow, Vector senderPosition, 
                         Ipv4Address snifferIp, Ipv4Address senderIp, Ipv4Address receiverIp,
-                        int msgTag, string message, 
-                        vector<ns3::MyTag::NeighborFull> neighList, 
+                        int msgTag, vector<ns3::MyTag::NeighborFull> neighList, 
                         double messageTime)
 {
     ostringstream fileName;
@@ -1274,13 +1272,15 @@ void Statistics::SnifferCallback(string path, double timeNow, Vector senderPosit
     ostringstream textLine;
     ostringstream aux_neighString;
     string neighListString;
+    string message;
 
     // Save sniffer traces to a file
-    // File name: flysafe_sniffer_traces_<time>.txt
+    // File name: flysafe_sniffer_traces_<node>.txt
     fileName << m_folderToTraces.c_str() << "flysafe_sniffer_traces_"
-             << m_timeLogFile.substr(0, m_timeLogFile.size() - 2).c_str() << ".txt";
+             << snifferIp << ".txt";
 
-    headerLine << "time" << "\t\t" << "snifferIP" << "\t\t" << "senderIP" << "\t\t" << "receiverIP" << "\t\t" << "senderPosition" << "\t\t" << "msgTag" << "\t\t" << "message" << "\t\t" << "senderNeighborList" << endl;
+    headerLine << "time" << "\t\t" << "senderIP" << "\t\t" << "receiverIP" << "\t\t" << "msgBroad" << "\t\t" << "msgId" << "\t\t" << "msgTrap" << "\t\t" 
+              << "messageTime" << "\t\t" << "senderPosition"  << "\t\t" << "senderNeighborList" << endl;
 
     AppendHeaderToFile(m_sentFile, fileName.str(), headerLine.str());
 
@@ -1296,8 +1296,79 @@ void Statistics::SnifferCallback(string path, double timeNow, Vector senderPosit
         neighListString.pop_back(); 
     }
 
-    textLine << timeNow << "\t\t" << snifferIp << "\t\t" << senderIp << "\t\t" << receiverIp << "\t\t(" << senderPosition.x << ", " << senderPosition.y 
-            << ", " << senderPosition.z << ")\t\t" << msgTag << "\t\t" << message.c_str() << "\t" << neighListString << endl;
+    switch (msgTag) {
+        case 0: message = "1\t\t0\t\t0"; break;
+        case 1: message = "0\t\t1\t\t0"; break;
+        case 2: message = "0\t\t0\t\t1"; break;
+        default: message = ""; break;
+    }
+
+    textLine << timeNow << "\t\t" << senderIp << "\t\t" << receiverIp << "\t\t" << message << "\t\t"
+            << messageTime << "\t\t" << senderPosition.x << ", " << senderPosition.y << ", " << senderPosition.z << "\t\t" << neighListString << endl;
+    AppendLineToFile(m_sentFile, fileName.str(), textLine.str());
+}
+
+/**
+ * @author Vinicius - MiM
+ * @brief Statistics of altered packets - MiM Callback
+ * @note This callback is used to log altered packets information from sniffer nodes.
+ * @date Sep 22, 2025  
+ * 
+ * @param path Path to the sniffer file
+ * @param timeNow Current simulation time
+ * @param senderPosition Position of the sender node
+ * @param snifferIp IP address of the sniffer node
+ * @param senderIp IP address of the sender node
+ * @param receiverIp IP address of the receiver node
+ * @param msgTag Message tag of the packet
+ * @param neighList List of neighbor nodes with their information
+ * @param messageTime Time when the message was sent
+ */
+void Statistics::MiMCallback(string path, double timeNow, Vector senderPosition, 
+                        Ipv4Address snifferIp, Ipv4Address senderIp, Ipv4Address receiverIp,
+                        int msgTag, vector<ns3::MyTag::NeighborFull> neighList, 
+                        double messageTime)
+{
+    ostringstream fileName;
+    ostringstream headerLine;
+    ostringstream textLine;
+    ostringstream aux_neighString;
+    string neighListString;
+    string message;
+
+    // Save MiM traces to a file
+    // File name: flysafe_MiM_traces_<node>.txt
+    fileName << m_folderToTraces.c_str() << "flysafe_MiM_traces_"
+             << snifferIp << ".txt";
+
+    headerLine << "time" << "\t\t" << "senderIP" << "\t\t" << "receiverIP" << "\t\t" << "msgBroad" << "\t\t" << "msgId" << "\t\t" << "msgTrap" << "\t\t" 
+              << "originalMessageTime" << "\t\t" 
+              << "senderPosition"  << "\t\t" << "senderNeighborList" << endl;
+
+    AppendHeaderToFile(m_sentFile, fileName.str(), headerLine.str());
+
+    for(auto n : neighList)
+    {
+        aux_neighString << '\t' << n.ip << " : x: " << n.position.x << " y: " 
+                        << n.position.y << " z: " << n.position.z << " hop: " << (int)n.hop << " ";
+    }
+
+    neighListString = aux_neighString.str();
+    
+    if (!neighListString.empty()) {
+        neighListString.pop_back(); 
+    }
+
+    switch (msgTag) {
+        case 0: message = "1\t\t0\t\t0"; break;
+        case 1: message = "0\t\t1\t\t0"; break;
+        case 2: message = "0\t\t0\t\t1"; break;
+        default: message = ""; break;
+    }
+
+    textLine << timeNow << "\t\t" << senderIp << "\t\t" << receiverIp << "\t\t" << message << "\t\t"
+            << messageTime << "\t\t" 
+            << senderPosition.x << ", " << senderPosition.y << ", " << senderPosition.z << "\t\t" << neighListString << endl;
     AppendLineToFile(m_sentFile, fileName.str(), textLine.str());
 }
 
