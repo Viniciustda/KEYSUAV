@@ -1,0 +1,2 @@
+time		senderIP		receiverIP		msgBroad		msgId		msgTrap		messageTime		senderPosition		senderNeighborList
+836.4			192.168.1.3		192.168.1.6		0		0		1		836.4		79.4046, 1365.79, 91			192.168.1.6 : x: 74.5735 y: 1309.47 z: 91 hop: 1 	192.168.1.17 : x: 112.283 y: 1436.51 z: 91 hop: 1

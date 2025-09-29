@@ -5,6 +5,7 @@
 !.gitignore
 !README.md
 !wscript
+!run_flysafe.sh
 
 # 3. Exceções: Manter os diretórios e arquivos do seu projeto
 
@@ -28,6 +29,8 @@
 !/scratch/flysafe.cc
 !/scratch/drone_image.png
 !/scratch/malicious_image.png
+!/scratch/drone_icon.png
+!/scratch/malicious_icon.png
 
 
 # 4. Adicionar os ignores genéricos 

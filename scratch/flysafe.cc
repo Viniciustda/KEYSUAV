@@ -512,8 +512,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
                             snifferNode->GetId(), 
                             snifferDevice->GetIfIndex(), 
                             true); 
-          cout << "Setting node " << snifferNode->GetObject<Ipv4>()->GetAddress(1,0).GetLocal() << " as sniffer!" << endl;
-                      
+          cout << "Setting node " << snifferNode->GetObject<Ipv4>()->GetAddress(1,0).GetLocal() << " as sniffer!" << endl;           
       } 
   } else {
       NS_LOG_INFO("FlySafe - No node configured as sniffer (nMalicious = 0).");
@@ -521,8 +520,8 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
 
   //Network Animation using NetAnim.
   AnimationInterface anim("flysafe.xml");
-  uint32_t droneRes = anim.AddResource ("../ns-3.34/scratch/drone_image.png");
-  uint32_t maliciousRes = anim.AddResource ("../ns-3.34/scratch/malicious_image.png");
+  uint32_t droneRes = anim.AddResource ("../ns-3.34/scratch/drone_icon.png");
+  uint32_t maliciousRes = anim.AddResource ("../ns-3.34/scratch/malicious_icon.png");
   for (uint32_t i = 0; i < Nodes.GetN (); ++i) {
     anim.UpdateNodeImage (Nodes.Get(i)->GetId (), droneRes);
     anim.UpdateNodeSize  (Nodes.Get(i)->GetId (), 75, 75);

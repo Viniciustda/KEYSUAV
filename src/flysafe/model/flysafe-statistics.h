@@ -57,7 +57,7 @@ public:
                         double messageTime);
 
   // Vinicius - MiM - Sep 22, 2025 - Callback for MiM attack
-  void MiMCallback(string path, double timeNow, Vector senderPosition, 
+  void MiMCallback(string path, double timeNow, Vector senderPosition, Vector forgedPosition,
                         Ipv4Address snifferIp, Ipv4Address senderIp, Ipv4Address receiverIp,
                         int msgTag, vector<ns3::MyTag::NeighborFull> neighList, 
                         double messageTime);

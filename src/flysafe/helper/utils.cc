@@ -312,8 +312,8 @@ ExecuteMiMAttack(Statistics* stats, Ptr<Node> snifferNode, Ptr<const Packet> pac
             << forgedPosition.x << ", " << forgedPosition.y << ", " << forgedPosition.z << ")" << endl << endl;
     
     // Call the statistics callback with the information of the forged packet
-    stats->MiMCallback("", timeNow, senderPosition, snifferIp, senderIp, receiverIp, 
-                            msgTag, neighList, messageTime);
+    stats->MiMCallback("", timeNow, senderPosition, forgedPosition, snifferIp, 
+                        senderIp, receiverIp, msgTag, neighList, messageTime);
 
 }
 
@@ -431,7 +431,8 @@ ProcessSniffedPacket(Statistics* stats, Ptr<Node> snifferNode,
                                       msgTag, neighborListForStats, messageTime);
 
                 // Checks if sender and receiver are in the sniffer's coverage area
-                if (snifferNode->IsAlreadyNeighbor(senderIp) && snifferNode->IsAlreadyNeighbor(receiverIp))
+                if (snifferNode->IsAlreadyNeighbor(senderIp) && snifferNode->IsAlreadyNeighbor(receiverIp) &&
+                    snifferNode->GetNeighborHop(senderIp) == 1 && snifferNode->GetNeighborHop(receiverIp) == 1)
                 {
                     ExecuteMiMAttack(stats, snifferNode, packet, 
                                     snifferIp, senderIp, receiverIp, 

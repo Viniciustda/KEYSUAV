@@ -1303,7 +1303,7 @@ void Statistics::SnifferCallback(string path, double timeNow, Vector senderPosit
         default: message = ""; break;
     }
 
-    textLine << timeNow << "\t\t" << senderIp << "\t\t" << receiverIp << "\t\t" << message << "\t\t"
+    textLine << timeNow << "\t\t\t" << senderIp << "\t\t" << receiverIp << "\t\t" << message << "\t\t"
             << messageTime << "\t\t" << senderPosition.x << ", " << senderPosition.y << ", " << senderPosition.z << "\t\t" << neighListString << endl;
     AppendLineToFile(m_sentFile, fileName.str(), textLine.str());
 }
@@ -1324,7 +1324,7 @@ void Statistics::SnifferCallback(string path, double timeNow, Vector senderPosit
  * @param neighList List of neighbor nodes with their information
  * @param messageTime Time when the message was sent
  */
-void Statistics::MiMCallback(string path, double timeNow, Vector senderPosition, 
+void Statistics::MiMCallback(string path, double timeNow, Vector senderPosition, Vector forgedPosition,
                         Ipv4Address snifferIp, Ipv4Address senderIp, Ipv4Address receiverIp,
                         int msgTag, vector<ns3::MyTag::NeighborFull> neighList, 
                         double messageTime)
@@ -1343,7 +1343,7 @@ void Statistics::MiMCallback(string path, double timeNow, Vector senderPosition,
 
     headerLine << "time" << "\t\t" << "senderIP" << "\t\t" << "receiverIP" << "\t\t" << "msgBroad" << "\t\t" << "msgId" << "\t\t" << "msgTrap" << "\t\t" 
               << "originalMessageTime" << "\t\t" 
-              << "senderPosition"  << "\t\t" << "senderNeighborList" << endl;
+              << "senderPosition"  << "\t\t" << "forgedPosition"  << "\t\t" << "senderNeighborList" << endl;
 
     AppendHeaderToFile(m_sentFile, fileName.str(), headerLine.str());
 
@@ -1366,9 +1366,10 @@ void Statistics::MiMCallback(string path, double timeNow, Vector senderPosition,
         default: message = ""; break;
     }
 
-    textLine << timeNow << "\t\t" << senderIp << "\t\t" << receiverIp << "\t\t" << message << "\t\t"
+    textLine << timeNow << "\t\t\t" << senderIp << "\t\t" << receiverIp << "\t\t" << message << "\t\t"
             << messageTime << "\t\t" 
-            << senderPosition.x << ", " << senderPosition.y << ", " << senderPosition.z << "\t\t" << neighListString << endl;
+            << senderPosition.x << ", " << senderPosition.y << ", " << senderPosition.z << "\t\t"
+            << forgedPosition.x << ", " << forgedPosition.y << ", " << forgedPosition.z << "\t\t" << neighListString << endl;
     AppendLineToFile(m_sentFile, fileName.str(), textLine.str());
 }
 

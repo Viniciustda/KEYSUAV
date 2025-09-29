@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Iniciando a execução paralela da etapa 13 (versão corrigida)..."
+echo "Iniciando a execução paralela da etapa 13..."
 
 # Detecta o número de núcleos de CPU
 N_CORES=$(nproc)

@@ -1,0 +1,4 @@
+sTime	eTime	dur	nMsg	nBroad	nId	nTrap
+404.01	928.2	524.19	55	3	1	51
+931	1184	253	1	0	1	0
+1184	1199	15	1	0	1	0
