@@ -9,7 +9,7 @@
 # O relatório final é salvo em 'flysafe_global_traces/global_flysafe_MiM_traces.txt'.
 # ==============================================================================
 
-echo "Iniciando a geração do relatório global (versão corrigida)..."
+echo "Iniciando a geração do relatório global..."
 
 OUTPUT_DIR="flysafe_global_traces"
 OUTPUT_FILE="$OUTPUT_DIR/global_flysafe_MiM_traces.txt"
