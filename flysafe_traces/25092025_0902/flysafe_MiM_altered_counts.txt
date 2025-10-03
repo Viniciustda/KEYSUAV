@@ -1,0 +1,2 @@
+total	max		min		mean
+100		31		1		7.14
