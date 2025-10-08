@@ -1,2 +1,0 @@
-min max mean stddev
-0.0	2.0	0.47	0.55

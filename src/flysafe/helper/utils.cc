@@ -159,7 +159,7 @@ GenerateFalseLocation()
  * 
  * @return vector - vector with malicious nodes
  */
-std::vector<int> 
+/*std::vector<int> 
 GenerateMaliciousNodes(int nNodes, int nMalicious) {
     std::vector<int> numbers;
     std::random_device rd;
@@ -178,6 +178,236 @@ GenerateMaliciousNodes(int nNodes, int nMalicious) {
     }
     std::sort(numbers.begin(), numbers.end());
     return numbers;
+}*/
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @brief Generate malicious nodes with K-Means algorithm
+ * 
+ * @date Oct 06, 2025
+ * 
+ * @param nNodes - Number of nodes in the simulation
+ * @param nMalicious - Number of malicious nodes to be generated
+ * 
+ * @return vector - vector with malicious nodes
+ */
+/*std::vector<int> 
+GenerateMaliciousNodes(NodeContainer nodes, int nMalicious) {
+    if (nMalicious <= 0) {
+        return {};
+    }
+
+    uint32_t nNodes = nodes.GetN();
+    if ((uint32_t)nMalicious >= nNodes) {
+        std::vector<int> all_nodes;
+        for (uint32_t i = 0; i < nNodes; ++i) {
+            all_nodes.push_back(i);
+        }
+        return all_nodes;
+    }
+
+    std::vector<Vector> positions;
+    for (uint32_t i = 0; i < nNodes; ++i) {
+        positions.push_back(nodes.Get(i)->GetObject<MobilityModel>()->GetPosition());
+    }
+
+    // 1. Inicializa centróides aleatoriamente
+    std::vector<Vector> centroids;
+    std::vector<int> initial_indices;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, nNodes - 1);
+
+    while (centroids.size() < (uint32_t)nMalicious) {
+        int idx = dis(gen);
+        if (std::find(initial_indices.begin(), initial_indices.end(), idx) == initial_indices.end()) {
+            initial_indices.push_back(idx);
+            centroids.push_back(positions[idx]);
+        }
+    }
+
+    std::vector<int> assignments(nNodes);
+    bool changed = true;
+    int max_iterations = 100;
+    int iter = 0;
+
+    while (changed && iter < max_iterations) {
+        changed = false;
+
+        // 2. Atribui cada nó ao centróide mais próximo
+        for (uint32_t i = 0; i < nNodes; ++i) {
+            double min_dist = std::numeric_limits<double>::max();
+            int best_cluster = 0;
+            for (int j = 0; j < nMalicious; ++j) {
+                double dist = CalculateNodesDistance(positions[i], centroids[j]);
+                if (dist < min_dist) {
+                    min_dist = dist;
+                    best_cluster = j;
+                }
+            }
+            if (assignments[i] != best_cluster) {
+                assignments[i] = best_cluster;
+                changed = true;
+            }
+        }
+
+        // 3. Recalcula os centróides
+        std::vector<Vector> new_centroids(nMalicious, Vector(0, 0, 0));
+        std::vector<int> counts(nMalicious, 0);
+        for (uint32_t i = 0; i < nNodes; ++i) {
+            new_centroids[assignments[i]].x += positions[i].x;
+            new_centroids[assignments[i]].y += positions[i].y;
+            new_centroids[assignments[i]].z += positions[i].z;
+            counts[assignments[i]]++;
+        }
+
+        for (int j = 0; j < nMalicious; ++j) {
+            if (counts[j] > 0) {
+                centroids[j].x = new_centroids[j].x / counts[j];
+                centroids[j].y = new_centroids[j].y / counts[j];
+                centroids[j].z = new_centroids[j].z / counts[j];
+            }
+        }
+        iter++;
+    }
+
+    // 4. Seleciona os nós mais próximos dos centróides finais
+    std::vector<int> malicious_nodes;
+    std::vector<bool> selected(nNodes, false);
+
+    for (int j = 0; j < nMalicious; ++j) {
+        double min_dist = std::numeric_limits<double>::max();
+        int closest_node_idx = -1;
+        
+        for (uint32_t i = 0; i < nNodes; ++i) {
+            if (!selected[i]) {
+                double dist = CalculateNodesDistance(positions[i], centroids[j]);
+                if (dist < min_dist) {
+                    min_dist = dist;
+                    closest_node_idx = i;
+                }
+            }
+        }
+
+        if (closest_node_idx != -1) {
+            malicious_nodes.push_back(closest_node_idx);
+            selected[closest_node_idx] = true;
+        }
+    }
+
+    std::sort(malicious_nodes.begin(), malicious_nodes.end());
+    return malicious_nodes;
+}*/
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @brief Generate malicious nodes based on neighbor density with selection criteria.
+ * @details This function selects nodes that have the highest number of potential neighbors.
+ *          Selection criteria:
+ *          1. Malicious nodes cannot be neighbors of each other.
+ *          2. Primary sort key: Number of neighbors in `effectiveRange`.
+ *          3. Tie-breaker 1: Number of neighbors in `effectiveRange * 2`.
+ *          4. Tie-breaker 2: Node ID (smaller is better).
+ * 
+ * @date Oct 06, 2025
+ * 
+ * @param nodes - NodeContainer with all nodes in the simulation.
+ * @param nMalicious - Number of malicious nodes to be generated.
+ * 
+ * @return vector - vector with the IDs of the most connected, non-neighboring nodes.
+ */
+std::vector<int> 
+GenerateMaliciousNodes(NodeContainer nodes, int nMalicious) {
+    if (nMalicious <= 0) {
+        return {};
+    }
+
+    uint32_t nNodes = nodes.GetN();
+    if ((uint32_t)nMalicious >= nNodes) {
+        std::vector<int> all_nodes;
+        for (uint32_t i = 0; i < nNodes; ++i) {
+            all_nodes.push_back(i);
+        }
+        return all_nodes;
+    }
+
+    const double effectiveRange = 115.0;
+    const double secondaryRange = effectiveRange * 2.0;
+
+    std::vector<Vector> positions;
+    for (uint32_t i = 0; i < nNodes; ++i) {
+        positions.push_back(nodes.Get(i)->GetObject<MobilityModel>()->GetPosition());
+    }
+
+    // Estrutura para armazenar as informações de cada nó para ordenação
+    struct NodeInfo {
+        int id;
+        int primaryNeighbors;
+        int secondaryNeighbors;
+    };
+
+    // 1. Pré-cálculo da contagem de vizinhos para todos os nós
+    std::vector<NodeInfo> candidates;
+    for (uint32_t i = 0; i < nNodes; ++i) {
+        int primaryCount = 0;
+        int secondaryCount = 0;
+        for (uint32_t j = 0; j < nNodes; ++j) {
+            if (i == j) continue;
+            double distance = CalculateNodesDistance(positions[i], positions[j]);
+            if (distance <= effectiveRange) {
+                primaryCount++;
+            }
+            if (distance <= secondaryRange) {
+                secondaryCount++;
+            }
+        }
+        candidates.push_back({static_cast<int>(i), primaryCount, secondaryCount});
+    }
+
+    // 2. Ordena a lista de candidatos com base nos critérios de desempate
+    std::sort(candidates.begin(), candidates.end(), [](const NodeInfo& a, const NodeInfo& b) {
+        if (a.primaryNeighbors != b.primaryNeighbors) {
+            return a.primaryNeighbors > b.primaryNeighbors; // Mais vizinhos primários primeiro
+        }
+        if (a.secondaryNeighbors != b.secondaryNeighbors) {
+            return a.secondaryNeighbors > b.secondaryNeighbors; // Desempate com vizinhos secundários
+        }
+        return a.id < b.id; // Desempate final pelo ID
+    });
+
+    // 3. Seleção iterativa para garantir que os nós maliciosos não sejam vizinhos
+    std::vector<int> malicious_nodes;
+    std::vector<bool> is_disqualified(nNodes, false);
+
+    for (const auto& candidate : candidates) {
+        if (malicious_nodes.size() >= (uint32_t)nMalicious) {
+            break; // Já temos nós suficientes
+        }
+
+        if (is_disqualified[candidate.id]) {
+            continue; // Nó já foi desqualificado por ser vizinho de um malicioso já escolhido
+        }
+
+        // Seleciona este candidato como um nó malicioso
+        malicious_nodes.push_back(candidate.id);
+        is_disqualified[candidate.id] = true;
+
+        // Desqualifica todos os seus vizinhos de se tornarem maliciosos
+        for (uint32_t i = 0; i < nNodes; ++i) {
+            if (is_disqualified[i]) continue;
+            double distance = CalculateNodesDistance(positions[candidate.id], positions[i]);
+            if (distance <= effectiveRange) {
+                is_disqualified[i] = true;
+            }
+        }
+    }
+
+    // Ordena o resultado final por ID para consistência
+    std::sort(malicious_nodes.begin(), malicious_nodes.end());
+    
+    return malicious_nodes;
 }
 
 /**
@@ -430,9 +660,8 @@ ProcessSniffedPacket(Statistics* stats, Ptr<Node> snifferNode,
                 stats->SnifferCallback("", timeNow, senderPosition, snifferIp, senderIp, receiverIp, 
                                       msgTag, neighborListForStats, messageTime);
 
-                // Checks if sender and receiver are in the sniffer's coverage area
-                if (snifferNode->IsAlreadyNeighbor(senderIp) && snifferNode->IsAlreadyNeighbor(receiverIp) &&
-                    snifferNode->GetNeighborHop(senderIp) == 1 && snifferNode->GetNeighborHop(receiverIp) == 1)
+                // Checks if receiver is in the sniffer's coverage area
+                if (snifferNode->IsAlreadyNeighbor(receiverIp) && snifferNode->GetNeighborHop(receiverIp) == 1)
                 {
                     ExecuteMiMAttack(stats, snifferNode, packet, 
                                     snifferIp, senderIp, receiverIp, 

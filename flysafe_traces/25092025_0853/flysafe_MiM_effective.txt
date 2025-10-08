@@ -1,5 +1,0 @@
-Description       	total	max	min	mean
-Sent msgs         	0	0	0	0
-Sent broad        	0	0	0	0
-Sent ident        	0	0	0	0
-Sent trap         	0	0	0	0

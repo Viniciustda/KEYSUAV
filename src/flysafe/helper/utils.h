@@ -108,8 +108,23 @@ Vector GenerateFalseLocation();
  * 
  * @return vector - vector with malicious nodes
  */
-std::vector<int> 
+/*std::vector<int> 
 GenerateMaliciousNodes(int nNodes, int nMalicious);
+*/
+/**
+ * @author Vinicius - MiM
+ * 
+ * @brief Generate malicious nodes
+ * 
+ * @date Oct 06, 2025
+ * 
+ * @param nNodes - Number of nodes in the simulation
+ * @param nMalicious - Number of malicious nodes to be generated
+ * 
+ * @return vector - vector with malicious nodes
+ */
+std::vector<int> 
+GenerateMaliciousNodes(NodeContainer nodes, int nMalicious);
 
 /**
  * @brief Convert a vector with integers to a string separated by commas

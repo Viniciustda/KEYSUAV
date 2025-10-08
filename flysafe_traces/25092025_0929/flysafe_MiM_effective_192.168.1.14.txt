@@ -1,3 +1,0 @@
-time	receivedTime	activeTime	senderIP	receiverIP	msgBroad	msgId	msgTrap	originalMessageTime	senderPosition	forgedPosition	senderNeighborList
-428.4	428.400	1.000	192.168.1.18	192.168.1.39	0	0	1	428.4	184.506, 1282.98, 91	613.021, 42.5856, 91	192.168.1.39 : x: 191.745 y: 1280.5 z: 91 hop: 1 	192.168.1.14 : x: 131.893 y: 1303.02 z: 91 hop: 1
-429.4	429.400	2.200	192.168.1.18	192.168.1.39	0	0	1	429.4	193.541, 1283.41, 91	754.456, 1192.57, 91	192.168.1.39 : x: 191.745 y: 1280.5 z: 91 hop: 1 	192.168.1.14 : x: 146.971 y: 1303.16 z: 91 hop: 1

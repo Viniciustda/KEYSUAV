@@ -1,0 +1,2 @@
+total	max		min		mean
+49		24		1		5.44

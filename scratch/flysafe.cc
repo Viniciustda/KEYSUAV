@@ -283,7 +283,13 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
   // Generate malicious nodes
   //----------------------------------------------------------------------------------
   
-  std::vector<int> malicious = GenerateMaliciousNodes(nNodes, nMalicious);
+  /** 
+     * @author Vinicius - MiM
+     * @note Reason for comment: Malicious UAV Implementation - Used for injection of fake data
+     * @date Oct 06, 2025
+     */
+  //std::vector<int> malicious = GenerateMaliciousNodes(nNodes, nMalicious);
+  std::vector<int> malicious = GenerateMaliciousNodes(Nodes, nMalicious);
   fileSim << "Malicious nodes: " << convertIntVectorToString(malicious) << endl << endl;
   NS_LOG_INFO("FlySafe - Generate and set malicious nodes ...");
 
@@ -520,8 +526,8 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
 
   //Network Animation using NetAnim.
   AnimationInterface anim("flysafe.xml");
-  uint32_t droneRes = anim.AddResource ("../ns-3.34/scratch/drone_icon.png");
-  uint32_t maliciousRes = anim.AddResource ("../ns-3.34/scratch/malicious_icon.png");
+  uint32_t droneRes = anim.AddResource ("../ns-3.34/scratch/drone_image.png");
+  uint32_t maliciousRes = anim.AddResource ("../ns-3.34/scratch/malicious_image.png");
   for (uint32_t i = 0; i < Nodes.GetN (); ++i) {
     anim.UpdateNodeImage (Nodes.Get(i)->GetId (), droneRes);
     anim.UpdateNodeSize  (Nodes.Get(i)->GetId (), 75, 75);

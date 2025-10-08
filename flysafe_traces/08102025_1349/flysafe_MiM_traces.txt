@@ -1,0 +1,5 @@
+Description       	total	max	min	mean
+Sent msgs         	105	62	0	35.00
+Sent broad        	0	0	0	0
+Sent ident        	21	14	0	7.00
+Sent trap         	84	48	0	28.00
