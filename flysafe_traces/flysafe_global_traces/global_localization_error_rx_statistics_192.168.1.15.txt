@@ -1,0 +1,3 @@
+dateTime	avgAvgError	stdDevAvgError	avgAvgMin	stdDevAvgMin	avgAvgMax	stdDevAvgMax
+08102025_1339 6.91 47.51 0.25 1.75 13.55 94.95
+08102025_1248 53.41 159.31 1.33 4.1 105.51 316.64

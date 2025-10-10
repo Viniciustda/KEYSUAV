@@ -1,0 +1,4 @@
+startTime	endTime	duration	awareness
+558.4	558.408	.008	0
+670.4	670.403	.003	0
+988.4	988.401	.001	0

@@ -1,0 +1,4 @@
+startTime	endTime	duration	awareness
+0	651	651	1
+651.801	1141	489.199	1
+1141.01	1199	57.99	1

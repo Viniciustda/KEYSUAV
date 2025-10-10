@@ -1,0 +1,5 @@
+startTime	endTime	duration	awareness
+0	922	922	1
+922.003	1045	122.997	1
+1045.01	1064	18.99	1
+1064	1199	135	1

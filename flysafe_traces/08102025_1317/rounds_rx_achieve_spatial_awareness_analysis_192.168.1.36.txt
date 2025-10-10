@@ -1,0 +1,3 @@
+sTime	eTime	dur	nMsg	nBroad	nId	nTrap
+651	651.801	.801	1	1	0	0
+1141	1141.01	.01	1	0	1	0
