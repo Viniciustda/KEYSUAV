@@ -1,9 +1,0 @@
---- Valores Absolutos ---
-max:       0.3943
-min:       0.0012
-mean:      0.0221
-
---- Média das Estatísticas ---
-avgMax:    0.0895
-avgMin:    0.0030
-avgMean:   0.0221

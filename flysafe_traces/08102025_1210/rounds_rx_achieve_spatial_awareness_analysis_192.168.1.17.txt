@@ -1,3 +1,0 @@
-sTime	eTime	dur	nMsg	nBroad	nId	nTrap
-227.2	227.203	.003	1	0	1	0
-446.2	446.202	.002	1	1	0	0

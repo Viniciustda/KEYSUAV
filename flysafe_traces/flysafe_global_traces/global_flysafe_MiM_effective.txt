@@ -1,5 +1,0 @@
-Description       	total	max	min	mean	avgMax	avgMin	avgMean
-Sent msgs         	6072	351	0	173,49	84,06	5,23	37,77
-Sent broad        	0	0	0	0,00	0,00	0,00	0,00
-Sent ident        	1193	318	0	34,09	21,80	0,74	6,94
-Sent trap         	4879	249	0	139,40	64,37	3,60	30,43

@@ -1,2 +1,0 @@
-total	max		min		mean
-100		23		1		6.67

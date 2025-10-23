@@ -1,2 +1,0 @@
-startTime	endTime	duration	awareness
-1092	1092	0	0

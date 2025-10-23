@@ -1,0 +1,4 @@
+startTime	endTime	duration	awareness
+0	851.2	851.2	1
+851.2	851.209	.009	0
+851.209	1199.2	347.991	1

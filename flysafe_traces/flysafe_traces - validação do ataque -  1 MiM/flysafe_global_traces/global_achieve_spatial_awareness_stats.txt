@@ -1,0 +1,10 @@
+Description	avgMax	avgMin	avgMean	avgStdDev
+Sent msgs	152	35	81.16	43.18
+Sent broad	130	24	58.43	40.49
+Sent ident	11	2	6.36	3.16
+Sent trap	35	0	16.36	13.32
+Recv msgs	73	12	42.86	22.54
+Recv broad	11	2	6.36	3.16
+Recv ident	29	7	18.16	7.82
+Recv trap	39	0	18.33	14.74
+Total msgs	208	56	124.03	53.5

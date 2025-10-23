@@ -661,13 +661,19 @@ ProcessSniffedPacket(Statistics* stats, Ptr<Node> snifferNode,
                                       msgTag, neighborListForStats, messageTime);
 
                 // Checks if receiver is in the sniffer's coverage area
-                if (snifferNode->IsAlreadyNeighbor(receiverIp) && snifferNode->GetNeighborHop(receiverIp) == 1)
+                /*if (snifferNode->IsAlreadyNeighbor(receiverIp) && snifferNode->GetNeighborHop(receiverIp) == 1)
                 {
                     ExecuteMiMAttack(stats, snifferNode, packet, 
                                     snifferIp, senderIp, receiverIp, 
                                     originalTag, senderPosition,
                                     msgTag, neighborListForStats, messageTime);
-                }
+                }*/
+
+                // Try execute MiM attack with all captured packets
+                ExecuteMiMAttack(stats, snifferNode, packet, 
+                                    snifferIp, senderIp, receiverIp, 
+                                    originalTag, senderPosition,
+                                    msgTag, neighborListForStats, messageTime);
             } 
         }        
     }

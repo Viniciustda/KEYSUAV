@@ -1,4 +1,0 @@
-dateTime	avgAvgError	stdDevAvgError	avgAvgMin	stdDevAvgMin	avgAvgMax	stdDevAvgMax
-08102025_1339 0.37 2.12 0.23 1.73 0.52 3.02
-08102025_1248 2.24 25.73 0.34 2.07 4.16 51.37
-08102025_1153 

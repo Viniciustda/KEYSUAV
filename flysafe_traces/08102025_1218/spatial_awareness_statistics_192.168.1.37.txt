@@ -1,2 +1,0 @@
-min(s) max(s) mean(s) stddev(s)
-3.99	197.99	44.74	45.77
