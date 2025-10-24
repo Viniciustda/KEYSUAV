@@ -10,7 +10,7 @@
 # -----------------------------------------------------------------------------
 
 
-do for [i=1:6]{ # Controls the loop based on the number of nodes in simulation
+do for [i=1:40]{ # Controls the loop based on the number of nodes in simulation
    fileName = 'rounds_achieve_aware_analysis_192.168.1.'.i.'.txt'
    findCommand = sprintf("find . -name *%s", fileName)
    ListOfFiles = system(findCommand) # Get nodes files in simulation directory
@@ -47,7 +47,7 @@ do for [i=1:6]{ # Controls the loop based on the number of nodes in simulation
 
 # unset print
 
-do for [i=1:6]{ # Controls the loop based on the number of nodes in simulation
+do for [i=1:40]{ # Controls the loop based on the number of nodes in simulation
    fileName = 'global_achieve_spatial_awareness_sum_192.168.1.'.i.'.txt'
    findCommand = sprintf("find . -name *%s", fileName)
    ListOfFiles = system(findCommand) # Get nodes files in simulation directory

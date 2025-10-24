@@ -1,0 +1,10 @@
+Description	max	min	mean	stdDev
+Sent msgs	321	17	118.0	106.72
+Sent broad	211	13	73.2	72.03
+Sent Ident	10	3	7.6	2.49
+Sent Trap	101	1	37.2	34.52
+Recv msgs	124	15	64.59	36.87
+Recv broad	10	3	7.6	2.49
+Recv Ident	35	10	16.8	9.32
+Recv Trap	103	1	40.2	34.19
+Total msgs	445	32	182.6	140.38
