@@ -1,0 +1,2 @@
+tDur(s)	tTM	tTB	tTI	tTT	tRM	tRB	tRI	tRT	tM
+0.2207	13	12	1	0	14	1	12	1	27

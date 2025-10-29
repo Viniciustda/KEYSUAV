@@ -1,2 +1,0 @@
-tDur(s)	tTM	tTB	tTI	tTT	tRM	tRB	tRI	tRT	tM
-0.016	8	8	0	0	8	0	8	0	16

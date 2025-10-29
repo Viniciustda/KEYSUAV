@@ -1,0 +1,2 @@
+simulation min(ms) max(ms) mean(ms) stddev(ms)
+29102025_1138	0.06	1003.05	2.18	41.54

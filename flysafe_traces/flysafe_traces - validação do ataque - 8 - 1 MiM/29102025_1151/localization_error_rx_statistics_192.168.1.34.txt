@@ -1,0 +1,2 @@
+avgAvgError stdDevAvgError avgAvgMin stdDevAvgMin avgAvgMax stdDevAvgMax
+1.59	3.7	0.87	3.44	2.33	4.67

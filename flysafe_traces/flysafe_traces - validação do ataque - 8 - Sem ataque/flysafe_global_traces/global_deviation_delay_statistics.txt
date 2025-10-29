@@ -1,0 +1,2 @@
+avgMin(ms) avgMax(ms) avgMean(ms) avgStddev(ms)
+0.06	2603.982	2.62	54.136

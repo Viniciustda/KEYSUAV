@@ -1,0 +1,4 @@
+sTime	eTime	dur	nTM	nTB	nTI	nTT	nRM	nRB	nRI	nRT	nTM
+814.6	814.601	.001	2	1	1	0	1	1	0	0	3
+896.6	899.6	3.0	4	4	0	0	0	0	0	0	4
+1192.6	1192.61	.01	1	1	0	0	1	0	1	0	2

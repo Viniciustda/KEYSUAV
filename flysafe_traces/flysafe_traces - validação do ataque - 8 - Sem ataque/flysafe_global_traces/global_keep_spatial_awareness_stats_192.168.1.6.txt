@@ -1,0 +1,11 @@
+Description	max	min	mean	stdDev
+Psi_Duration(s)	1198	1073	1136.33	43.23
+Sent msgs	1208	1128	1178.4	29.41
+Sent broad	938	517	824.2	162.9
+Sent Ident	27	9	16.6	6.94
+Sent Trap	643	223	337.6	156.33
+Recv msgs	632	220	326.2	157.13
+Recv broad	27	9	16.6	6.94
+Recv Ident	24	7	15.6	6.28
+Recv Trap	585	193	294.0	149.44
+Total msgs	1819	1385	1504.6	158.77

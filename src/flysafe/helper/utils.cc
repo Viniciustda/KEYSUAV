@@ -341,14 +341,14 @@ GenerateMaliciousNodes(NodeContainer nodes, int nMalicious) {
         positions.push_back(nodes.Get(i)->GetObject<MobilityModel>()->GetPosition());
     }
 
-    // Estrutura para armazenar as informações de cada nó para ordenação
+    // Struct to hold node info for sorting
     struct NodeInfo {
         int id;
         int primaryNeighbors;
         int secondaryNeighbors;
     };
 
-    // 1. Pré-cálculo da contagem de vizinhos para todos os nós
+    // Pre-compute neighbor counts for all nodes
     std::vector<NodeInfo> candidates;
     for (uint32_t i = 0; i < nNodes; ++i) {
         int primaryCount = 0;
@@ -366,35 +366,35 @@ GenerateMaliciousNodes(NodeContainer nodes, int nMalicious) {
         candidates.push_back({static_cast<int>(i), primaryCount, secondaryCount});
     }
 
-    // 2. Ordena a lista de candidatos com base nos critérios de desempate
+    // Sort the candidate list based on tie-breaking criteria
     std::sort(candidates.begin(), candidates.end(), [](const NodeInfo& a, const NodeInfo& b) {
         if (a.primaryNeighbors != b.primaryNeighbors) {
-            return a.primaryNeighbors > b.primaryNeighbors; // Mais vizinhos primários primeiro
+            return a.primaryNeighbors > b.primaryNeighbors; // More primary neighbors first
         }
         if (a.secondaryNeighbors != b.secondaryNeighbors) {
-            return a.secondaryNeighbors > b.secondaryNeighbors; // Desempate com vizinhos secundários
+            return a.secondaryNeighbors > b.secondaryNeighbors; // Tie-breaker with secondary neighbors
         }
-        return a.id < b.id; // Desempate final pelo ID
+        return a.id < b.id; // Final tie-breaker by ID
     });
 
-    // 3. Seleção iterativa para garantir que os nós maliciosos não sejam vizinhos
+    // Iterative selection to ensure malicious nodes are not neighbors
     std::vector<int> malicious_nodes;
     std::vector<bool> is_disqualified(nNodes, false);
 
     for (const auto& candidate : candidates) {
         if (malicious_nodes.size() >= (uint32_t)nMalicious) {
-            break; // Já temos nós suficientes
+            break; 
         }
 
         if (is_disqualified[candidate.id]) {
-            continue; // Nó já foi desqualificado por ser vizinho de um malicioso já escolhido
+            continue; // Node has already been disqualified for being a neighbor of an already chosen malicious node
         }
 
-        // Seleciona este candidato como um nó malicioso
+        // Select this candidate as a malicious node
         malicious_nodes.push_back(candidate.id);
         is_disqualified[candidate.id] = true;
 
-        // Desqualifica todos os seus vizinhos de se tornarem maliciosos
+        // Disqualify all of its neighbors from becoming malicious
         for (uint32_t i = 0; i < nNodes; ++i) {
             if (is_disqualified[i]) continue;
             double distance = CalculateNodesDistance(positions[candidate.id], positions[i]);
@@ -404,7 +404,7 @@ GenerateMaliciousNodes(NodeContainer nodes, int nMalicious) {
         }
     }
 
-    // Ordena o resultado final por ID para consistência
+    // Sort the final result by ID for consistency
     std::sort(malicious_nodes.begin(), malicious_nodes.end());
     
     return malicious_nodes;
@@ -593,7 +593,9 @@ ProcessSniffedPacket(Statistics* stats, Ptr<Node> snifferNode,
             Ipv4Address receiverIp = ipv4Header.GetDestination();
 
             // If the sniffer IP is the same as the sender or receiver, or the message is a broadcast, skip processing
-            if (senderIp == snifferIp || receiverIp == snifferIp || receiverIp == Ipv4Address("255.255.255.255")) {
+            // if (senderIp == snifferIp || receiverIp == snifferIp || receiverIp == Ipv4Address("255.255.255.255")) {
+            // If the sniffer IP is the same as the sender or receiver, skip processing
+            if (senderIp == snifferIp || receiverIp == snifferIp) {
                 return;
             }
 

@@ -1,0 +1,2 @@
+total	max		min		mean
+15		13		1		5.00

@@ -1,0 +1,9 @@
+--- Valores Absolutos ---
+max:       6.878
+min:       0.000
+mean:      3.022
+
+--- Média das Estatísticas ---
+avgMax:    4.478
+avgMin:    1.859
+avgMean:   3.022

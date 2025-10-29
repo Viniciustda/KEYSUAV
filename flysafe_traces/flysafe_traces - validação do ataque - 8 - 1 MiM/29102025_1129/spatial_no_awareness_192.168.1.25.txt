@@ -1,0 +1,4 @@
+startTime	endTime	duration	awareness
+86.8	86.8022	.0022	0
+1076.8	1076.8	0	0
+1096.8	1096.81	.01	0

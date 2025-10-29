@@ -1,0 +1,2 @@
+total	max		min		mean
+24		9		1		4.00

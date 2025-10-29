@@ -1,0 +1,5 @@
+startTime	endTime	duration	awareness
+312	312.007	.007	0
+691	691.011	.011	0
+950	950.001	.001	0
+1177	1177	0	0

@@ -1141,9 +1141,10 @@ Statistics::EvaluateNeighborhood(Ipv4Address nodeIP, vector<ns3::MyTag::Neighbor
     for (int x = 0; x < (int)distanceError.size(); x++){
       sumDist += distanceError[x];
     }
-    double value = sumDist/(int)distanceError.size();
+    // Vinicius - MiM - Oct 29, 2025 - Commented because was calculating average two times
+    //double value = sumDist/(int)distanceError.size();
     strFinal << (sumDist/(int)distanceError.size());
-    strFinal << (std::ceil(value * 100.0) / 100.0);
+    //strFinal << (std::ceil(value * 100.0) / 100.0);
 
     auto minmax = std::minmax_element(distanceError.begin(), distanceError.end());
     strFinal << "\t"  << *minmax.first; // get MinError
@@ -1335,6 +1336,38 @@ void Statistics::MiMCallback(string path, double timeNow, Vector senderPosition,
     ostringstream aux_neighString;
     string neighListString;
     string message;
+
+    m_totalMsgSent++;
+
+    switch (msgTag) {
+    case 0: // Broadcast - Searching neighbors
+        m_broadcastSent++;
+        break;
+
+    case 1: // Unicast - Indentification sent to a neighbors search
+        m_idMsgSent++;
+        break;
+
+    case 2: // Unicast - Indentification sent to a neighbors search
+        m_trapMsgSent++;
+        break;
+
+    case 3: // Unicast - Special Id sent whether NL is empty
+        m_specialIdMsgSent++;
+        break;
+
+    case 4: // Unicast - Suspect neighbor message
+        m_suspiciousNeighborSent++;
+        break;
+
+    case 5: // Unicast - blocked neighbor message
+        m_blockedNeighborSent++;
+        break;
+
+    case 6: // Unicast - Suspicious reduction message
+        m_suspiciousReductionSent++;
+        break;
+    }
 
     // Save MiM traces to a file
     // File name: flysafe_MiM_traces_<node>.txt
