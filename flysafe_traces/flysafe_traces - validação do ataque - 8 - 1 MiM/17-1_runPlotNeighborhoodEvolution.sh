@@ -42,7 +42,7 @@ find . -maxdepth 1 -mindepth 1 -type d | xargs -P $NUM_CORES -I {} bash -c "
     
     # Run the Gnuplot script, passing the folder name.
     # We escape the inner quotes for the bash -c command.
-    gnuplot -e \"folder='{}'\" -p 17-2_plot_neighborhood_evolution.gp
+    gnuplot -e \"folder='{}'\" -p 17-2_plotNeighborhoodEvolution.gp
     
     echo '<== Finished processing for folder: {}'
 "
