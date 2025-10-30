@@ -1,0 +1,9 @@
+type		minSent	maxSent	avgSent		minRecv	maxRecv	avgRecv
+Broadcasts	31159.0	34099.0	33193.4		993.0	1398.0	1116.2
+Identification	998.0	1465.0	1146.4		796.0	1260.0	925.8
+Trap		14753.0	17878.0	15735.0		12401.0	15108.0	13212.0
+SpecialId	0.0	0.0	0.0		0.0	0.0	0.0
+SuspNeighbors	0.0	0.0	0.0		0.0	0.0	0.0
+BlockedNeighbor	0.0	0.0	0.0		0.0	0.0	0.0
+SuspReduction	0.0	0.0	0.0		0.0	0.0	0.0
+Total		49743.0	50502.0	50074.8		14387.0	17766.0	15254.0
