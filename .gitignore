@@ -13,8 +13,12 @@
 !/flysafe_traces/
 !/flysafe_traces/**
 
-# Manter módulo flysafe dentro de src/
+# Manter módulo ascon-128 dentro de src/
 !/src/
+!/src/ascon-128/
+!/src/ascon-128/**
+
+# Manter módulo flysafe dentro de src/
 !/src/flysafe/
 !/src/flysafe/**
 
