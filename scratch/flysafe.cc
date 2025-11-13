@@ -96,7 +96,7 @@ NS_LOG_COMPONENT_DEFINE("ScenarioFlySafe_v1");
  * ========================================================================
  */
 
-void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalicious) {
+void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalicious, bool defense) { // Vinicius - MiM - Nov 12, 2025 - Added defense parameter
 
   string tracesFolder;
   string scenarioSimFile;
@@ -142,6 +142,8 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
 
   // Save start seed in file
   fileSim << "Start seed: " << seed << endl << endl;
+
+  fileSim << "Security Defenses: " << (defense ? "Enabled" : "Disabled") << endl << endl; // Vinicius - MiM - Nov 12, 2025 - Log defense status
 
   MobilityHelper mobilityUAVs;
 
@@ -260,6 +262,32 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
 
   NodesInterface = address.Assign(devices);
 
+  //----------------------------------------------------------------------------------
+  // Generate and distribute asymmetric keys for all nodes - Vinicius - MiM
+  //----------------------------------------------------------------------------------
+  
+  if (defense) {
+    NS_LOG_INFO("FlySafe - Generating and distributing asymmetric keys...");
+    
+    std::vector<std::pair<std::string, std::string>> allKeys = GenerateAsymmetricKeys(nNodes);
+
+    // Security check: Ensure the key generator worked
+    if (allKeys.size() != nNodes) {
+        NS_LOG_ERROR("Failed to generate keys! Expected " << nNodes << " keys, but got " << allKeys.size() << ". Aborting.");
+        return; // Exit simulation
+    }
+
+    // Distribute the key pairs (private/public) to each node
+    for (uint32_t i = 0; i < nNodes; i++) {
+        Ptr<Node> node = Nodes.Get(i);
+        std::string privateKeyPEM = allKeys[i].first;
+        std::string publicKeyPEM = allKeys[i].second;
+
+        // Set keys in the Node object
+        node->SetPrivateKey(privateKeyPEM);
+        node->SetPublicKey(publicKeyPEM);
+    }
+  }
 
   //----------------------------------------------------------------------------------
   // Install applications
@@ -584,6 +612,7 @@ int main(int argc, char *argv[]) {
   string simTime;
   char runMode;
   int nMalicious;
+  bool defense = true; // Vinicius - MiM - Nov 12, 2025 - Defense mechanisms enabled by default
   
   
   set<char> runModeSet = {'R','M'};
@@ -598,6 +627,7 @@ int main(int argc, char *argv[]) {
   cmd.AddValue("nNodes", "Number of node devices", nNodes);
   cmd.AddValue("runMode", "Mode of simulation execution", runMode);
   cmd.AddValue("nMalicious", "Number of malicious nodes", nMalicious);
+  cmd.AddValue("defense", "Enable or disable security defenses (default: true)", defense); // Vinicius - MiM - Nov 12, 2025
   cmd.Parse(argc, argv);
 
   if (nNodes < 2 ) {
@@ -629,7 +659,7 @@ int main(int argc, char *argv[]) {
 
   cout << "Start of simulation: " << simTime.c_str() << endl;
 
-  FlySafeSimulation(nNodes, simTime, runMode, nMalicious);
+  FlySafeSimulation(nNodes, simTime, runMode, nMalicious, defense); // Vinicius - MiM - Nov 12, 2025 - Added defense parameter
 
   cout << "End of simulation: " << GetTimeOfSimulationStart().c_str() << endl;
   //Create2DPlotFile();

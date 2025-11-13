@@ -1,10 +1,9 @@
 #ifndef CRYPTO_AEAD_H
 #define CRYPTO_AEAD_H
 
-/*
- Este cabeçalho define a interface padronizada pela API do eBACS/SUPERCOP
- para funções de AEAD.
-*/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int crypto_aead_encrypt(
     unsigned char* c, unsigned long long* clen,
@@ -21,5 +20,9 @@ int crypto_aead_decrypt(
     unsigned long long adlen, const unsigned char* npub,
     const unsigned char* k
 );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // CRYPTO_AEAD_H

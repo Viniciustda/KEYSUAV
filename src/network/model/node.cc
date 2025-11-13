@@ -20,6 +20,8 @@
  */
 
 #include <iostream>
+#include <string>
+#include <map>
 
 #include "node.h"
 #include "node-list.h"
@@ -207,6 +209,7 @@ Node::DoDispose ()
       *i = 0;
     }
   m_applications.clear ();
+  m_sharedKeys.clear();
   Object::DoDispose ();
 }
 void 
@@ -1226,5 +1229,236 @@ Node::ClearMaliciousNodeList ()
   m_MaliciousNodeList.clear();
 }
 
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 11, 2025
+ * 
+ * @brief Set the public key for the node
+ * 
+ * @param pubKey The public key as a string
+ */
+void
+Node::SetPublicKey(std::string pubKey) {
+  NS_LOG_FUNCTION (this << pubKey);
+  m_publicKey = pubKey;
+}
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 11, 2025
+ * 
+ * @brief Get the public key of the node
+ * 
+ * @return std::string The public key as a string
+ */
+std::string
+Node::GetPublicKey() const {
+  NS_LOG_FUNCTION (this);
+  return m_publicKey;
+}
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 11, 2025
+ * 
+ * @brief Set the private key for the node
+ * 
+ * @param privKey The private key as a string
+ */
+void
+Node::SetPrivateKey(std::string privKey) {
+  NS_LOG_FUNCTION (this << "privKey");
+  m_privateKey = privKey;
+}
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 11, 2025
+ * 
+ * @brief Add a shared key for a neighbor node
+ * 
+ * @param neighborIp The IPv4 address of the neighbor node
+ * @param sharedKey The shared key as a string
+ */
+void
+Node::AddSharedKey(Ipv4Address neighborIp, std::string sharedKey) {
+  NS_LOG_FUNCTION (this << neighborIp << "sharedKey");
+  m_sharedKeys[neighborIp] = sharedKey;
+}
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 11, 2025
+ * 
+ * @brief Get the shared key for a neighbor node
+ * 
+ * @param neighborIp The IPv4 address of the neighbor node
+ * 
+ * @return std::string The shared key as a string
+ */
+std::string
+Node::GetSharedKey(Ipv4Address neighborIp) const {
+  NS_LOG_FUNCTION (this << neighborIp);
+  auto it = m_sharedKeys.find(neighborIp);
+  if (it != m_sharedKeys.end()) {
+    return it->second;
+  } else {
+    return ""; // Return an empty string if the shared key is not found
+  }
+}
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 11, 2025
+ * 
+ * @brief Check if a shared key exists for a neighbor node
+ * 
+ * @param neighborIp The IPv4 address of the neighbor node
+ * 
+ * @return true If the shared key exists
+ * @return false If the shared key does not exist
+ */
+bool
+Node::HasSharedKey(Ipv4Address neighborIp) const {
+  NS_LOG_FUNCTION (this << neighborIp);
+  return m_sharedKeys.find(neighborIp) != m_sharedKeys.end();
+}
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 11, 2025
+ * 
+ * @brief Key Derivation Function (KDF) to derive a 16-byte key from an input secret
+ * 
+ * @param inputSecret The input secret as a string
+ * 
+ * @return std::string The derived 16-byte key as a string
+ */
+std::string
+Node::Kdf(const std::string& inputSecret) const
+{
+  NS_LOG_FUNCTION (this << "secret_hidden");
+  
+  unsigned char hash_buffer[SHA256_DIGEST_LENGTH];
+
+  SHA256((const unsigned char*)inputSecret.c_str(), inputSecret.length(), hash_buffer);
+
+  std::string derivedKey((char*)hash_buffer, 16);
+
+  return derivedKey;
+}
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 11, 2025
+ * 
+ * @brief Create a shared key with a neighbor node
+ * 
+ * @param neighborIp The IPv4 address of the neighbor node
+ * @param neighborPubKey The public key of the neighbor node as a string
+ */
+void
+Node::CreateSharedKey(Ipv4Address neighborIp, const std::string& neighborPubKey)
+{
+  NS_LOG_FUNCTION (this << neighborIp << "neighborPubKey_hidden");
+
+  // If shared key already exists, do nothing
+  if (HasSharedKey(neighborIp)) {
+    return;
+  }
+
+  // Prepere variables for ECDH
+  EVP_PKEY *private_key = NULL;
+  EVP_PKEY *peer_public_key = NULL;
+  EVP_PKEY_CTX *ctx = NULL;
+  BIO *bio = NULL;
+  unsigned char *secret_buf = NULL;
+  size_t secret_len;
+
+  std::string sharedSecret = "";
+  std::string asconKey = "";
+
+  // Load our private key (m_privateKey)
+  bio = BIO_new_mem_buf(m_privateKey.c_str(), -1);
+  if (!bio) {
+      NS_LOG_ERROR ("Failed to create BIO for private key");
+      goto cleanup; // Go to the end of the function
+  }
+  private_key = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
+  BIO_free(bio); bio = NULL;
+  if (!private_key) {
+      NS_LOG_ERROR ("Failed to read private key from PEM");
+      goto cleanup;
+  }
+
+  // Load the neighbor's public key (neighborPubKey)
+  bio = BIO_new_mem_buf(neighborPubKey.c_str(), -1);
+  if (!bio) {
+      NS_LOG_ERROR ("Failed to create BIO for public key");
+      goto cleanup;
+  }
+  peer_public_key = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
+  BIO_free(bio); bio = NULL;
+  if (!peer_public_key) {
+      NS_LOG_ERROR ("Failed to read public key from PEM");
+      goto cleanup;
+  }
+
+  // Prepare the derivation context (ECDH)
+  ctx = EVP_PKEY_CTX_new(private_key, NULL);
+  if (!ctx) {
+      NS_LOG_ERROR ("Failed to create PKEY context");
+      goto cleanup;
+  }
+  if (EVP_PKEY_derive_init(ctx) <= 0) {
+      NS_LOG_ERROR ("Failed to initialize derivation");
+      goto cleanup;
+  }
+  if (EVP_PKEY_derive_set_peer(ctx, peer_public_key) <= 0) {
+      NS_LOG_ERROR ("Failed to set peer (neighbor)");
+      goto cleanup;
+  }
+
+  // Execute ECDH (first discover the size, then derive the secret)
+  if (EVP_PKEY_derive(ctx, NULL, &secret_len) <= 0) {
+      NS_LOG_ERROR ("Failed to get secret length");
+      goto cleanup;
+  }
+  secret_buf = (unsigned char*)OPENSSL_malloc(secret_len);
+  if (!secret_buf) {
+      NS_LOG_ERROR ("Failed to allocate secret buffer");
+      goto cleanup;
+  }
+  if (EVP_PKEY_derive(ctx, secret_buf, &secret_len) <= 0) {
+      NS_LOG_ERROR ("Failed to derive secret (ECDH)");
+      goto cleanup;
+  }
+
+  // Convert the secret to std::string
+  sharedSecret.assign((char*)secret_buf, secret_len);
+
+  // Apply our KDF to obtain the ASCON key
+  asconKey = Kdf(sharedSecret);
+  
+  // Store the final key
+  AddSharedKey(neighborIp, asconKey);
+
+  // 'cleanup' is a 'goto' used in C to ensure memory is freed
+  cleanup:
+    if (secret_buf) OPENSSL_free(secret_buf);
+    if (ctx) EVP_PKEY_CTX_free(ctx);
+    if (peer_public_key) EVP_PKEY_free(peer_public_key);
+    if (private_key) EVP_PKEY_free(private_key);
+    if (bio) BIO_free(bio);
+
+}
 
 } // namespace ns3

@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <utility>
 #include "ns3/mobility-module.h"
 #include "ns3/gnuplot.h"
 
@@ -27,6 +28,13 @@
 #include "ns3/wifi-mac-trailer.h" 
 #include "ns3/wifi-net-device.h"
 #include "ns3/wifi-phy.h"
+
+#include <openssl/evp.h>
+#include <openssl/ec.h>
+#include <openssl/pem.h>
+#include <openssl/bio.h>
+#include <openssl/err.h>
+#include <openssl/objects.h>
 
 using namespace std;
 
@@ -191,7 +199,17 @@ void
 ProcessSniffedPacket(Statistics* stats, Ptr<Node> snifferNode,
                        std::string context, Ptr<const Packet> packet,
                        uint16_t channelFreqMhz, WifiTxVector txvector,
-                       MpduInfo mpdu, SignalNoiseDbm snr, uint16_t staId);                     
+                       MpduInfo mpdu, SignalNoiseDbm snr, uint16_t staId); 
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @brief Generate asymmetric keys for nodes in the simulation.
+ * 
+ * @param nNodes - Number of nodes in the simulation
+ */
+std::vector<std::pair<std::string, std::string>> 
+GenerateAsymmetricKeys(uint32_t nNodes);
 
 void Create2DPlotFile ();
 }

@@ -73,6 +73,8 @@ def build(bld):
         'helper/delay-jitter-estimation.cc',
         'helper/simple-net-device-helper.cc',
         ]
+    
+    network.use.append('OPENSSL') # Vinicius - MiM
 
     network_test = bld.create_ns3_module_test_library('network')
     network_test.source = [

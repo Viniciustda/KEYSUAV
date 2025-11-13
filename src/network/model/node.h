@@ -22,12 +22,20 @@
 #define NODE_H
 
 #include <vector>
+#include <string>
+#include <map>
 
 #include "ns3/object.h"
 #include "ns3/callback.h"
 #include "ns3/ptr.h"
 #include "ns3/net-device.h"
 #include "ns3/vector.h"
+
+#include <openssl/sha.h>
+#include <openssl/evp.h>
+#include <openssl/ec.h>
+#include <openssl/err.h>
+#include <openssl/pem.h>
 
 namespace ns3 {
 
@@ -275,6 +283,15 @@ public:
   uint8_t GetNMaliciousNodes ();
   void ClearMaliciousNodeList ();
 
+  // ---------------------------------------------------------------------
+  // Vinicius - MiM - 11 nov 25 - Methods for criptography
+  // ---------------------------------------------------------------------
+  void SetPublicKey(std::string pubKey);
+  std::string GetPublicKey() const;
+  void SetPrivateKey(std::string privKey);
+  void CreateSharedKey (Ipv4Address neighborIp, const std::string& neighborPubKey);
+  std::string GetSharedKey(Ipv4Address neighborIp) const;
+
 protected:
   /**
    * The dispose method. Subclasses must override this method
@@ -387,6 +404,20 @@ private:
   MaliciousNodeHandlerList m_MaliciousNodeList; //!< Malicious node list in the node
   Vector m_position;                            //!< Store node position
   u_int8_t m_state;                             //!< Store node state (0 ordinary, 1 malicious)
+
+  // ---------------------------------------------------------------------
+  // Vinicius - MiM - 11 nov 25 - Methods for criptography
+  // ---------------------------------------------------------------------
+  void AddSharedKey(Ipv4Address neighborIp, std::string sharedKey);
+  bool HasSharedKey(Ipv4Address neighborIp) const;
+  std::string Kdf (const std::string& inputSecret) const;
+
+  // ---------------------------------------------------------------------
+  // Vinicius - MiM - 11 nov 25 - Attributes for criptography
+  // ---------------------------------------------------------------------
+  std::string m_publicKey;                       //!< Public key
+  std::string m_privateKey;                      //!< Private key
+  std::map<Ipv4Address, std::string> m_sharedKeys; //!< Shared keys map
 };
 
 

@@ -682,6 +682,107 @@ ProcessSniffedPacket(Statistics* stats, Ptr<Node> snifferNode,
 }
 
 /**
+ * @author Vinicius - MiM
+ * 
+ * @brief Convert EVP_PKEY to PEM string
+ * 
+ * @note It is a auxiliary function used in GenerateAsymmetricKeys()
+ * 
+ * @param pkey - EVP_PKEY pointer
+ * @param isPrivate - true for private key, false for public key
+ * 
+ * @return std::string - PEM formatted key string
+ */
+std::string pkeyToPem(EVP_PKEY *pkey, bool isPrivate) {
+    BIO *bio = BIO_new(BIO_s_mem());
+    if (!bio) {
+        throw std::runtime_error("Fail to create BIO");
+    }
+
+    if (isPrivate) {
+        // Write the private key (unencrypted)
+        if (!PEM_write_bio_PrivateKey(bio, pkey, NULL, NULL, 0, NULL, NULL)) {
+            BIO_free(bio);
+            throw std::runtime_error("Fail to write private key to BIO");
+        }
+    } else {
+        // Write the public key
+        if (!PEM_write_bio_PUBKEY(bio, pkey)) {
+            BIO_free(bio);
+            throw std::runtime_error("Fail to write public key to BIO");
+        }
+    }
+
+    char *data_ptr;
+    long len = BIO_get_mem_data(bio, &data_ptr);
+    std::string pem(data_ptr, len);
+    BIO_free(bio);
+    return pem;
+}
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @brief Generate asymmetric keys for nodes in the simulation.
+ * 
+ * @param nNodes - Number of nodes in the simulation
+ */
+std::vector<std::pair<std::string, std::string>> 
+GenerateAsymmetricKeys(uint32_t nNodes) {
+    
+    std::vector<std::pair<std::string, std::string>> keyList;
+
+    for (uint32_t i = 0; i < nNodes; ++i) {
+        EVP_PKEY *pkey = NULL;
+        EVP_PKEY_CTX *ctx = NULL;
+        
+        try {
+            // Create context for key generation
+            ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
+            if (!ctx) {
+                throw std::runtime_error("Failed to create PKEY context");
+            }
+
+            // Initialize key generation
+            if (EVP_PKEY_keygen_init(ctx) <= 0) {
+                throw std::runtime_error("Failed to initialize keygen");
+            }
+
+            // Set the curve (secp256r1 is P-256, an excellent standard curve)
+            if (EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, NID_X9_62_prime256v1) <= 0) {
+                throw std::runtime_error("Failed to set curve NID");
+            }
+
+            // Generate the key pair
+            if (EVP_PKEY_keygen(ctx, &pkey) <= 0) {
+                throw std::runtime_error("Failed to generate key pair");
+            }
+            
+            // Convert keys to PEM format (string)
+            std::string private_pem = pkeyToPem(pkey, true);
+            std::string public_pem = pkeyToPem(pkey, false);
+
+            // Add to the list
+            keyList.push_back(std::make_pair(private_pem, public_pem));
+
+            // Cleanup
+            EVP_PKEY_CTX_free(ctx);
+            EVP_PKEY_free(pkey);
+
+        } catch (const std::exception &e) {
+            std::cerr << "Error generating key pair " << i << ": " << e.what() << std::endl;
+            // Cleanup in case of error
+            if (ctx) EVP_PKEY_CTX_free(ctx);
+            if (pkey) EVP_PKEY_free(pkey);
+            // Stop to avoid partial results
+            return {}; // Return empty list in case of failure
+        }
+    }
+
+    return keyList;
+}
+
+/**
  * @brief Plot a 2D file
  * 
  */

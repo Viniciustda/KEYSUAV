@@ -750,6 +750,9 @@ def configure(conf):
 
     conf.env['MODULES_NOT_BUILT'] = []
 
+    # Vinicius - MiM
+    conf.check_cfg(package='openssl', args=['--cflags', '--libs'], uselib_store='OPENSSL', mandatory=True)
+
     conf.recurse('bindings/python')
 
     conf.recurse('src')

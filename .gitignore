@@ -24,6 +24,7 @@
 
 # Manter os arquivos do core do ns-3 modificados
 !/src/network/
+!/src/network/wscript
 !/src/network/model/
 !/src/network/model/node.h
 !/src/network/model/node.cc
