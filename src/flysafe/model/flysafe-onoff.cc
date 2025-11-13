@@ -569,6 +569,14 @@ void FlySafeOnOff::SendPacket ()
                   << " FlySafeOnOff - Search neighbors from position x: "
                   << position.x << " y: " << position.y << " z: " << position.z 
                   << "\n" << std::endl; 
+        
+        /** 
+         * @author Vinicius - MiM
+         * @note Handshake public key addition to broadcast tag
+         * @date Nov 13, 2025  
+         */
+        broadcastTag.SetPublicKey(ThisNode->GetPublicKey());
+        std::cout << m_nodeIP << " : Set pubKey in Broadcast: " << broadcastTag.GetPublicKey() << std::endl;
 
         broadcastTag.SetSimpleValue(0);     // Add value to tag
         broadcastTag.SetNNeighbors(ThisNode->GetNNeighbors());      // Broadcast only with NL = 0       
@@ -978,6 +986,17 @@ void FlySafeOnOff::SendMessage(Address addressTo, string message,
   
   timeNow = Simulator::Now().GetSeconds();
   tagToSend.SetMessageTime(timeNow);
+
+  /** 
+   * @author Vinicius - MiM
+   * @note Handshake public key addition to tag
+   * @date Nov 13, 2025  
+   */
+  if (tagValue == 0 || tagValue == 1 || tagValue == 3){ //  Broadcast or Identification or Special Identification{
+    std::string myPubKey = GetNode()->GetPublicKey();
+    tagToSend.SetPublicKey(myPubKey);
+    std::cout << m_nodeIP << " : onoff - Set pubKey in message with tag " << (int)tagValue << ": " << tagToSend.GetPublicKey() << std::endl;
+  }
 
   packet->AddPacketTag(tagToSend);
   socket->Send(packet);

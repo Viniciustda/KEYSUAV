@@ -38,7 +38,19 @@ TypeId MyTag::GetInstanceTypeId(void) const { return GetTypeId(); }
 uint32_t MyTag::GetSerializedSize (void) const
 {
 	//return sizeof(Vector) + sizeof(uint8_t) + sizeof(uint32_t) + sizeof(vector<NeighInfos>);
-	return sizeof(Vector) + sizeof(uint8_t) + sizeof(uint32_t) + (sizeof(NeighInfos) * m_nNeighborsValue) + sizeof(double);
+	//return sizeof(Vector) + sizeof(uint8_t) + sizeof(uint32_t) + (sizeof(NeighInfos) * m_nNeighborsValue) + sizeof(double);
+
+	
+	// Vinicius - MiM - Nov 13, 2025 - Fixed size: U8(tag) + Double(time) + U32(n_neigh) + Vector(pos)
+    uint32_t fixedSize = sizeof(uint8_t) + sizeof(double) + sizeof(uint32_t) + (3 * sizeof(double));
+    
+    // Vinicius - MiM - Nov 13, 2025 - Variable size 1: String size (U32) + string data
+    uint32_t keySize = sizeof(uint32_t) + m_publicKey.size();
+    
+    // Vinicius - MiM - Nov 13, 2025 - Variable size 2: Vector Data
+    uint32_t vectorSize = sizeof(NeighInfos) * m_nNeighborsValue;
+
+    return fixedSize + keySize + vectorSize;
 }
 
 
@@ -58,6 +70,13 @@ void MyTag::Serialize (TagBuffer i) const
 	i.WriteDouble (m_currentPosition.x); // Store the position
 	i.WriteDouble (m_currentPosition.y);
 	i.WriteDouble (m_currentPosition.z);
+
+	// Vinicius - MiM - Nov 13, 2025 - Store public key
+	uint32_t keySize = m_publicKey.size();
+    i.WriteU32(keySize);
+    if (keySize > 0) {
+        i.Write((const uint8_t*)m_publicKey.c_str(), keySize);
+    }
 
 	// Array application
 	struct NeighInfos nInfos[m_nNeighborsValue];
@@ -96,6 +115,17 @@ void MyTag::Deserialize (TagBuffer i)
 	m_currentPosition.x = i.ReadDouble(); // Extract position
 	m_currentPosition.y = i.ReadDouble();
 	m_currentPosition.z = i.ReadDouble();
+
+	// Vinicius - MiM - Nov 13, 2025 - Extract public key
+	uint32_t keySize = i.ReadU32();
+    if (keySize > 0) {
+        uint8_t* buffer = new uint8_t[keySize];
+        i.Read(buffer, keySize);
+        m_publicKey.assign((char*)buffer, keySize);
+        delete[] buffer;
+    } else {
+        m_publicKey.clear();
+    }
 
 	// Arrarys application
 	struct NeighInfos nInfos[m_nNeighborsValue];

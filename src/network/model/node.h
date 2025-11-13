@@ -415,9 +415,9 @@ private:
   // ---------------------------------------------------------------------
   // Vinicius - MiM - 11 nov 25 - Attributes for criptography
   // ---------------------------------------------------------------------
-  std::string m_publicKey;                       //!< Public key
-  std::string m_privateKey;                      //!< Private key
-  std::map<Ipv4Address, std::string> m_sharedKeys; //!< Shared keys map
+  std::string m_publicKey;                          //!< Public key
+  std::string m_privateKey;                         //!< Private key
+  std::map<Ipv4Address, std::string> m_sharedKeys;  //!< Shared keys map
 };
 
 

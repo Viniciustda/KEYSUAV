@@ -73,12 +73,18 @@ public:
   vector<NeighInfos> GetNeighInfosVector() const;
 	void SetNeighInfosVector(const vector<NeighInfos> neighInfosVector);
 
+  // Vinicius - MiM - Nov 13, 2025
+  void SetPublicKey(const std::string& key) { m_publicKey = key; };
+  std::string GetPublicKey() const { return m_publicKey; };
+
 private:
   uint8_t m_simpleValue;                  //!< Tag value
   uint32_t m_nNeighborsValue;             //!< Number of neighbor nodes
 	Vector m_currentPosition;               //!< Current position
   vector<NeighInfos> m_neighInfosVector;  //!< Store a list of neighbor nodes infos
   double m_messageTime;                   //!< Store message sent time
+  // Vinicius - MiM - Nov 13, 2025
+  std::string m_publicKey;                //!< Public key
 };
 } // namespace ns3
 

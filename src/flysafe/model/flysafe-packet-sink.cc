@@ -379,6 +379,16 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
             }
           }*/
 
+          /** 
+           * @author Vinicius - MiM
+           * @note Handshake public key extract from broadcast tag and create shared key
+           * @date Nov 13, 2025  
+           */
+          std::string pubKey = receivedTag.GetPublicKey();
+          std::cout << m_nodeIP << " : sink - Receved a broadcast with pubKey from " << neighIP << " : " << pubKey << std::endl; // Comment this line
+          ThisNode->CreateSharedKey(neighIP, pubKey);
+          std::cout << m_nodeIP << ": sink - Created shared key with: " << neighIP << " : " << ThisNode->GetSharedKey(neighIP) << std::endl; // Comment this line
+          
           SendMessage(neighIPPort,"hello!",1, (uint32_t) nNeigh, nodePosition, nodeInfosVectorTag); // Sent identification
           
           neighListFull = GetNeighborIpListFull();
@@ -427,6 +437,16 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
               << neighIP << " at position x: " << position.x << " y: " << position.y << " z: " << position.z
               << " - It has " << nNeigh << " neighbor(s)" 
               << " - at " << distance << " meters and sent at " << receivedTag.GetMessageTime() << "s" << std::endl;
+
+          /** 
+           * @author Vinicius - MiM
+           * @note Handshake public key extract from identification tag and create shared key
+           * @date Nov 13, 2025  
+           */
+          std::string pubKey = receivedTag.GetPublicKey();
+          std::cout << m_nodeIP << " : sink - Receved a identification with pubKey from " << neighIP << " : " << pubKey << std::endl; // Comment this line
+          ThisNode->CreateSharedKey(neighIP, pubKey);
+          std::cout << m_nodeIP << ": sink - Created shared key with: " << neighIP << " : " << ThisNode->GetSharedKey(neighIP) << std::endl; // Comment this line
 
           if (suspiciousRegistered){ // Registered in malicious nodes analysis
             suspiciousRegistered = false;
@@ -772,6 +792,17 @@ void FlySafePacketSink::SendMessage(Address addressTo, string message,
 
   timeNow = Simulator::Now().GetSeconds();
   tagToSend.SetMessageTime(timeNow);
+
+  /** 
+   * @author Vinicius - MiM
+   * @note Handshake public key addition to tag
+   * @date Nov 13, 2025  
+   */
+  if (tagValue == 0 || tagValue == 1 || tagValue == 3){ //  Broadcast or Identification or Special Identification{
+    std::string myPubKey = GetNode()->GetPublicKey();
+    tagToSend.SetPublicKey(myPubKey);
+    std::cout << m_nodeIP << " : sink - Set pubKey in message with tag " << (int)tagValue << ": " << tagToSend.GetPublicKey() << std::endl;
+  }
 
   cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Sent Identification to "
       << destinyIP << " from position x: " << nodePosition.x << " y: " << nodePosition.y << " z: " << nodePosition.z 
