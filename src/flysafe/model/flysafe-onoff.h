@@ -31,6 +31,7 @@
 #include "ns3/ptr.h"
 #include "ns3/data-rate.h"
 #include "ns3/traced-callback.h"
+#include "ns3/random-variable-stream.h"
 #include "ns3/seq-ts-size-header.h"
 #include "ns3/packet-socket-address.h"
 #include "ns3/vector.h"
@@ -109,7 +110,7 @@ public:
 
   virtual ~FlySafeOnOff();
 
-  void Setup(Address address, uint32_t protocolId, double maliciousTime);
+  void Setup(Address address, uint32_t protocolId, double maliciousTime, bool defense); // Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
   
   /**
    * \brief Set the total number of bytes to send.
@@ -282,6 +283,7 @@ private:
   Address m_node;                                   //!< Node's IP Address
   Ipv4Address m_nodeIP;                             //!< Node's IPv4 Address
   bool m_searchNeighbors;                           //!< True forces a neighbors search
+  bool m_defense;                                   //!< True if defense mechanism is active  -  Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
   /** 
    * @author Vinicius - MiM
    * @note Reason for comment: Malicious UAV Implementation - Used for injection of fake data

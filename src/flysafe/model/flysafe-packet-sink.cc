@@ -60,7 +60,7 @@ FlySafePacketSink::~FlySafePacketSink() {
  * @param toAddress IPv4 address to bind to
  * @param protocolId Type of protocol to be used to (1 - UDP, 2 - TCP)
  */
-void FlySafePacketSink::Setup(Address toAddress, uint32_t protocolId, double maliciousTime) {
+void FlySafePacketSink::Setup(Address toAddress, uint32_t protocolId, double maliciousTime, bool defense) {
 
   NS_LOG_FUNCTION(this);
   m_node = GetNodeIpAddress();
@@ -68,6 +68,8 @@ void FlySafePacketSink::Setup(Address toAddress, uint32_t protocolId, double mal
   m_local = toAddress;
   m_socket = 0;
   m_totalRx = 0;
+
+  m_defense = defense; // Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
 
   Ptr<Node> ThisNode = this->GetNode();
 
@@ -206,7 +208,8 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
       newBuffer.clear();
       uint8_t *buffer = new uint8_t[packet->GetSize()];
       packet->CopyData(buffer, packet->GetSize());
-      newBuffer = (char *)buffer;
+      //newBuffer = (char *)buffer;                        // Vinicius - MiM - Nov 18, 2025
+      newBuffer.assign((char *)buffer, packet->GetSize()); // Vinicius - MiM - Nov 18, 2025
 
       nNeigh = ThisNode->GetNNeighbors();
 
@@ -224,8 +227,67 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
         }
       }  
 
+      /** 
+       * @author Vinicius - MiM
+       * @note Decryption of Trap messages received from neighbor nodes if defense is active
+       * @date Nov 18, 2025  
+       */
+
+      bool tagFound = false;
+
+      // Verify if the defense is active and the received message is a Trap message
+      if (m_defense && newBuffer.substr(0, 5) == "Trap!") {
+          
+          // Extract the Nonce from the end of the payload (after "Trap!")
+          std::string nonceReceived = newBuffer.substr(5, CRYPTO_NPUBBYTES);
+          
+          // Search for the shared key with the neighbor node
+          std::string sharedKey = ThisNode->GetSharedKey(neighIP);
+
+          if (!sharedKey.empty()) {
+             // Try to read the tag using the key and nonce 
+             tagFound = packet->PeekPacketTag(receivedTag, sharedKey, nonceReceived);
+             
+             if (tagFound) {
+                 std::cout << m_nodeIP << " : " << Simulator::Now().GetSeconds() 
+                           << " FlySafePacketSink - [SEC] Decrypted Trap message from " << neighIP << std::endl << std::endl;
+             } else {
+                 std::cout << m_nodeIP << " : " << Simulator::Now().GetSeconds() 
+                           << " FlySafePacketSink - [SEC] Failed to decrypt Trap from " << neighIP << std::endl << std::endl;
+             }
+          } else {
+             std::cout << m_nodeIP << " : " << Simulator::Now().GetSeconds() 
+                    << " FlySafePacketSink - [SEC] No Shared Key for " << neighIP 
+                    << ". Sending Hello (Tag 0) to force Handshake!" << std::endl;
+
+             Ptr<Ipv4> ipv4 = ThisNode->GetObject<Ipv4>();
+             Ipv4Address broadcastIP = ipv4->GetAddress(1, 0).GetBroadcast();
+             Address broadcastAddress(InetSocketAddress(broadcastIP, 9));
+             SendMessage(broadcastAddress, "Hello!", 0, (uint32_t)nNeigh, nodePosition, nodeInfosVectorTag);
+
+             tagFound = false;
+          }
+      } 
+      else {
+          // Try to read the tag normally
+          tagFound = packet->PeekPacketTag(receivedTag);
+      }
+
+      // If tag not found, continue to next received packet
+      if (!tagFound) {
+           delete[] buffer;
+           continue; 
+      }
+
+      if (receivedTag.GetSimpleValue() == 255) {
+          std::cout << m_nodeIP << " : " << Simulator::Now().GetSeconds() 
+                    << " FlySafePacketSink - Packet ignored due to invalid/encrypted content (Tag 255)." << std::endl;
+           delete[] buffer;
+           continue; 
+      }
+
       // Recover tag from packet and the information inside it
-      packet->PeekPacketTag(receivedTag);
+      //packet->PeekPacketTag(receivedTag); // Vinicius - MiM - Nov 18, 2025
       position = receivedTag.GetPosition();
       numberNNeighbors = receivedTag.GetNNeighbors();
       neighInfosVectorTag = receivedTag.GetNeighInfosVector(); // Get the NL from the received tag
@@ -381,40 +443,56 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
 
           /** 
            * @author Vinicius - MiM
-           * @note Handshake public key extract from broadcast tag and create shared key
+           * @note Handshake public key extract from broadcast tag and create shared key if defense mechanism is active
            * @date Nov 13, 2025  
            */
-          std::string pubKey = receivedTag.GetPublicKey();
-          std::cout << m_nodeIP << " : sink - Receved a broadcast with pubKey from " << neighIP << " : " << pubKey << std::endl; // Comment this line
-          ThisNode->CreateSharedKey(neighIP, pubKey);
-          std::cout << m_nodeIP << ": sink - Created shared key with: " << neighIP << " : " << ThisNode->GetSharedKey(neighIP) << std::endl; // Comment this line
-          
-          SendMessage(neighIPPort,"hello!",1, (uint32_t) nNeigh, nodePosition, nodeInfosVectorTag); // Sent identification
+          if (m_defense) {
+            std::string pubKey = receivedTag.GetPublicKey();
+            std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Receved a broadcast with pubKey from " << neighIP << " : " << pubKey << std::endl; 
+            ThisNode->CreateSharedKey(neighIP, pubKey);
+            std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Created shared key with: " << neighIP << " : " << ThisNode->GetSharedKey(neighIP) << std::endl; 
+          }
+
+          SendMessage(neighIPPort,"hello!", 1, (uint32_t) nNeigh, nodePosition, nodeInfosVectorTag); // Sent identification
           
           neighListFull = GetNeighborIpListFull();
           m_txTrace(timeNow, m_nodeIP,neighIP,1,"Identification", position, neighListFull); // Callback for id message sent
 
-          // Update my neighbor list with new neighbor broadcasted information 
-          if (suspiciousRegistered){ // Registered in malicious nodes analysis
-            suspiciousRegistered = false;
-            cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
-                 << " in my neighbors list" << std::endl;
+
+          /** 
+           * @author Vinicius - MiM
+           * @note If defense mechanism is active, add neighbor to handshake list. Else update my neighbor list with new neighbor broadcasted information
+           * @date Nov 14, 2025  
+           */
+          if (m_defense) {
+            if (!ThisNode->IsAlreadyNeighbor(neighIP)) {
+                ThisNode->AddHandshakeNeighbor(neighIP);
+                std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Added node " << neighIP << " to the handshake list "  << std::endl; 
+            }
           }
-          else if (ThisNode->IsAlreadyNeighbor(neighIP)) { // Check if neighbor node is in neighbors list
-              
-              cout << m_nodeIP << " : " << timeNow << " " << neighIP << " is already my neighbor!" << std::endl;
-              cout << m_nodeIP << " : " << timeNow << " Updated " << neighIP <<  " position!" << std::endl;
-              
-              ThisNode->UpdateNeighbor(neighIP, position, distance, neighAttitude, 3, 1);  
-          }
-          else { // Put neighbor node in my neighbors list
+          else {
+            // Update my neighbor list with new neighbor broadcasted information 
+            if (suspiciousRegistered){ // Registered in malicious nodes analysis
+              suspiciousRegistered = false;
               cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
-                   << " in my neighbors list" << std::endl;
-              ThisNode->RegisterNeighbor(neighIP, position, distance, 0, 3, 1, 0);    
-          }
-          
-          if(numberNNeighbors != 0){
-            UpdateMyNeighborList(neighInfosVectorTag);
+                  << " in my neighbors list" << std::endl;
+            }
+            else if (ThisNode->IsAlreadyNeighbor(neighIP)) { // Check if neighbor node is in neighbors list
+                
+                cout << m_nodeIP << " : " << timeNow << " " << neighIP << " is already my neighbor!" << std::endl;
+                cout << m_nodeIP << " : " << timeNow << " Updated " << neighIP <<  " position!" << std::endl;
+                
+                ThisNode->UpdateNeighbor(neighIP, position, distance, neighAttitude, 3, 1);  
+            }
+            else { // Put neighbor node in my neighbors list
+                cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
+                    << " in my neighbors list" << std::endl;
+                ThisNode->RegisterNeighbor(neighIP, position, distance, 0, 3, 1, 0);    
+            }
+            
+            if(numberNNeighbors != 0){
+              UpdateMyNeighborList(neighInfosVectorTag);
+            }
           }
 
           neighListFull = GetNeighborIpListFull();
@@ -440,32 +518,47 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
 
           /** 
            * @author Vinicius - MiM
-           * @note Handshake public key extract from identification tag and create shared key
+           * @note Handshake public key extract from identification tag and create shared key if defense mechanism is active
            * @date Nov 13, 2025  
            */
-          std::string pubKey = receivedTag.GetPublicKey();
-          std::cout << m_nodeIP << " : sink - Receved a identification with pubKey from " << neighIP << " : " << pubKey << std::endl; // Comment this line
-          ThisNode->CreateSharedKey(neighIP, pubKey);
-          std::cout << m_nodeIP << ": sink - Created shared key with: " << neighIP << " : " << ThisNode->GetSharedKey(neighIP) << std::endl; // Comment this line
-
-          if (suspiciousRegistered){ // Registered in malicious nodes analysis
-            suspiciousRegistered = false;
-            cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
-                 << " in my neighbors list" << std::endl;
+          if (m_defense) {
+            std::string pubKey = receivedTag.GetPublicKey();
+            std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Receved a identification with pubKey from " << neighIP << " : " << pubKey << std::endl; 
+            ThisNode->CreateSharedKey(neighIP, pubKey);
+            std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Created shared key with: " << neighIP << " : " << ThisNode->GetSharedKey(neighIP) << std::endl; 
           }
-          else if (ThisNode->IsAlreadyNeighbor(neighIP)){
-            ThisNode->UpdateNeighbor(neighIP,position, distance, neighAttitude, 3, 1);
-            cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Updated " << neighIP 
-                 << " in my neighbors list" << std::endl;
+
+          /** 
+           * @author Vinicius - MiM
+           * @note If defense mechanism is active, add neighbor to handshake list. Else update my neighbor list with new neighbor broadcasted information
+           * @date Nov 14, 2025  
+           */
+          if (m_defense) {
+            if (!ThisNode->IsAlreadyNeighbor(neighIP)) {
+                ThisNode->AddHandshakeNeighbor(neighIP);
+                std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Added node " << neighIP << " to the handshake list "  << std::endl; 
+            }
           }
           else {
-            ThisNode->RegisterNeighbor(neighIP,position,distance,neighAttitude,3, 1, 0);
-            cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
-                << " in my neighbors list" << std::endl;
-          }
+            if (suspiciousRegistered){ // Registered in malicious nodes analysis
+              suspiciousRegistered = false;
+              cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
+                  << " in my neighbors list" << std::endl;
+            }
+            else if (ThisNode->IsAlreadyNeighbor(neighIP)){
+              ThisNode->UpdateNeighbor(neighIP,position, distance, neighAttitude, 3, 1);
+              cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Updated " << neighIP 
+                  << " in my neighbors list" << std::endl;
+            }
+            else {
+              ThisNode->RegisterNeighbor(neighIP,position,distance,neighAttitude,3, 1, 0);
+              cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
+                  << " in my neighbors list" << std::endl;
+            }
 
-          if(numberNNeighbors != 0){
-            UpdateMyNeighborList(neighInfosVectorTag);
+            if(numberNNeighbors != 0){
+              UpdateMyNeighborList(neighInfosVectorTag);
+            }
           }
 
           neighListFull = GetNeighborIpListFull();
@@ -495,24 +588,47 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
           cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - NL received with this trap message from " << neighIP << endl;
           PrintNeighborList(neighInfosVectorTag);
           
-          if (suspiciousRegistered){ // Registered in malicious nodes analysis
-            suspiciousRegistered = false;
-            cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
-                 << " in my neighbors list" << std::endl;
-          }
-          else if (!ThisNode->IsAlreadyNeighbor(neighIP)){
-            ThisNode->RegisterNeighbor(neighIP,position,distance,neighAttitude,3,1, 0);
-            cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
-                 << " in my neighbors list" << std::endl;
+          /** 
+           * @author Vinicius - MiM
+           * @note 
+           * @date Nov 14, 2025  
+           */
+          if (m_defense) {
+            if (ThisNode->IsHandshakeNeighbor(neighIP)) {
+              ThisNode->RemoveHandshakeNeighbor(neighIP);
+              ThisNode->RegisterNeighbor(neighIP,position,distance,neighAttitude,3,1, 0);
+              cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
+                  << " in my neighbors list" << std::endl;
+            }
+            else if (ThisNode->IsAlreadyNeighbor(neighIP)) {
+              ThisNode->UpdateNeighbor(neighIP,position, distance, neighAttitude, 3, 1);
+              cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Updated " << neighIP 
+                  << " location in my neighbors list" << std::endl; 
+            }
+            else {
+              SendMessage(neighIPPort, "Hello!", 0, (uint32_t)nNeigh, nodePosition, nodeInfosVectorTag);
+            }
           }
           else {
-            ThisNode->UpdateNeighbor(neighIP,position, distance, neighAttitude, 3, 1);
-            cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Updated " << neighIP 
-                 << " location in my neighbors list" << std::endl; 
-          }
+            if (suspiciousRegistered){ // Registered in malicious nodes analysis
+              suspiciousRegistered = false;
+              cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
+                  << " in my neighbors list" << std::endl;
+            }
+            else if (!ThisNode->IsAlreadyNeighbor(neighIP)){
+              ThisNode->RegisterNeighbor(neighIP,position,distance,neighAttitude,3,1, 0);
+              cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
+                  << " in my neighbors list" << std::endl;
+            }
+            else {
+              ThisNode->UpdateNeighbor(neighIP,position, distance, neighAttitude, 3, 1);
+              cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Updated " << neighIP 
+                  << " location in my neighbors list" << std::endl; 
+            }
 
-          if(numberNNeighbors != 0){
-            UpdateMyNeighborList(neighInfosVectorTag);
+            if(numberNNeighbors != 0){
+              UpdateMyNeighborList(neighInfosVectorTag);
+            }
           }
 
           neighListFull = GetNeighborIpListFull();
@@ -557,29 +673,54 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
             }
           }*/
 
+          /** 
+           * @author Vinicius - MiM
+           * @note Handshake public key extract from special identification tag and create shared key if defense mechanism is active
+           * @date Nov 13, 2025  
+           */
+          if (m_defense) {
+            std::string pubKey = receivedTag.GetPublicKey();
+            std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Receved a special identification with pubKey from " << neighIP << " : " << pubKey << std::endl; 
+            ThisNode->CreateSharedKey(neighIP, pubKey);
+            std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Created shared key with: " << neighIP << " : " << ThisNode->GetSharedKey(neighIP) << std::endl; 
+          }
+
           SendMessage(neighIPPort,"hello!",1, (uint32_t) nNeigh, nodePosition, nodeInfosVectorTag); // Sent identification
 
-          if (suspiciousRegistered){ // Registered in malicious nodes analysis
-            suspiciousRegistered = false;
-            cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
-                 << " in my neighbors list" << std::endl;
+          /** 
+           * @author Vinicius - MiM
+           * @note If defense mechanism is active, add neighbor to handshake list. Else update my neighbor list with new neighbor broadcasted information
+           * @date Nov 14, 2025  
+           */
+          if (m_defense) {
+            if (!ThisNode->IsAlreadyNeighbor(neighIP)) {
+                ThisNode->AddHandshakeNeighbor(neighIP);
+                std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Added node " << neighIP << " to the handshake list "  << std::endl; 
+            }
           }
-          // Update my neighbor list with new neighbor broadcasted information 
-          else if (ThisNode->IsAlreadyNeighbor(neighIP)) { // Check if neighbor node is in neighbors list
-              
-              cout << m_nodeIP << " : " << timeNow << " " << neighIP << " is already my neighbor!" << std::endl;
-              cout << m_nodeIP << " : " << timeNow << " Updated " << neighIP <<  " position!" << std::endl;
-              
-              ThisNode->UpdateNeighbor(neighIP, position, distance, neighAttitude, 3, 1); 
-          }
-          else { // Put neighbor node in my neighbors list
+          else {
+            if (suspiciousRegistered){ // Registered in malicious nodes analysis
+              suspiciousRegistered = false;
               cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
-                    << " in my neighbors list" << std::endl;
-              ThisNode->RegisterNeighbor(neighIP, position, distance, 0, 3, 1, 0);    
-          }
-          
-          if(numberNNeighbors != 0){
-            UpdateMyNeighborList(neighInfosVectorTag);
+                  << " in my neighbors list" << std::endl;
+            }
+            // Update my neighbor list with new neighbor broadcasted information 
+            else if (ThisNode->IsAlreadyNeighbor(neighIP)) { // Check if neighbor node is in neighbors list
+                
+                cout << m_nodeIP << " : " << timeNow << " " << neighIP << " is already my neighbor!" << std::endl;
+                cout << m_nodeIP << " : " << timeNow << " Updated " << neighIP <<  " position!" << std::endl;
+                
+                ThisNode->UpdateNeighbor(neighIP, position, distance, neighAttitude, 3, 1); 
+            }
+            else { // Put neighbor node in my neighbors list
+                cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
+                      << " in my neighbors list" << std::endl;
+                ThisNode->RegisterNeighbor(neighIP, position, distance, 0, 3, 1, 0);    
+            }
+            
+            if(numberNNeighbors != 0){
+              UpdateMyNeighborList(neighInfosVectorTag);
+            }
           }
 
           neighListFull = GetNeighborIpListFull();
@@ -780,37 +921,113 @@ void FlySafePacketSink::SendMessage(Address addressTo, string message,
   }
 
   socket->Connect(destinyAddress);
-  Ptr<Packet> packet;
 
-  packet = Create<Packet>(reinterpret_cast<const uint8_t *>(message.c_str()),
-                          message.size());
+  /** 
+   * @author Vinicius - MiM
+   * @note Cryptographic nonce addition to Trap message
+   * @date Nov 19, 2025  
+   */
+
+  std::string nonce = "";
+  std::string finalMessage = message;
+
+  // If defense mechanism is active and message is a Trap message
+  if (m_defense && tagValue == 2) {
+      // Create a random nonce (16 bytes)
+      Ptr<UniformRandomVariable> rng = CreateObject<UniformRandomVariable>();
+      nonce.resize(CRYPTO_NPUBBYTES);
+      for(int i=0; i<CRYPTO_NPUBBYTES; i++) {
+          nonce[i] = (char)rng->GetInteger(0, 255);
+      }
+
+      // Append nonce to message
+      finalMessage = message + nonce; // "Trap!" + [16 random bytes]
+  }
+
+  Ptr<Packet> packet;
+  packet = Create<Packet>(reinterpret_cast<const uint8_t *>(finalMessage.c_str()),
+                          finalMessage.size());
   MyTag tagToSend;
   tagToSend.SetSimpleValue(tagValue);         // Add tag value
-  tagToSend.SetNNeighbors(nNeigbors);         // Add the number of neighbor nodes to tag
-  tagToSend.SetPosition(nodePosition);        // Add nodes positin to tag
-  tagToSend.SetNeighInfosVector(nodeInfos);   // Add nodes NL to tag
-
   timeNow = Simulator::Now().GetSeconds();
   tagToSend.SetMessageTime(timeNow);
+
+  /** 
+   * @author Vinicius - MiM
+   * @note Send information to neighbor nodes only if defense mechanism is not active or tag is not 0, 1 or 3
+   * @date Nov 14, 2025  
+   */
+  if (!m_defense || !(tagValue == 0 || tagValue == 1 || tagValue == 3)) {
+    tagToSend.SetNNeighbors(nNeigbors);         // Add the number of neighbor nodes to tag
+    tagToSend.SetPosition(nodePosition);        // Add nodes positin to tag
+    tagToSend.SetNeighInfosVector(nodeInfos);   // Add nodes NL to tag
+  }
+  else { // If defense mechanism is active, do not send number of neighbors and position. But is necessary set these fields to default values, because this information is serialized
+    tagToSend.SetNNeighbors(0);
+    tagToSend.SetPosition(Vector(0, 0, 0));
+  }
 
   /** 
    * @author Vinicius - MiM
    * @note Handshake public key addition to tag
    * @date Nov 13, 2025  
    */
-  if (tagValue == 0 || tagValue == 1 || tagValue == 3){ //  Broadcast or Identification or Special Identification{
+  if (m_defense && (tagValue == 0 || tagValue == 1 || tagValue == 3)) { //  Broadcast or Identification or Special Identification if defense mechanism is active
     std::string myPubKey = GetNode()->GetPublicKey();
     tagToSend.SetPublicKey(myPubKey);
-    std::cout << m_nodeIP << " : sink - Set pubKey in message with tag " << (int)tagValue << ": " << tagToSend.GetPublicKey() << std::endl;
+    std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Set pubKey in message with tag " << (int)tagValue << ": " << tagToSend.GetPublicKey() << std::endl;
   }
 
-  cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Sent Identification to "
+  switch (tagValue)
+  {
+  case 0:
+    cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Sent Broadcast" << std::endl;
+    break;
+  case 1:
+    cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Sent Identification to "
       << destinyIP << " from position x: " << nodePosition.x << " y: " << nodePosition.y << " z: " << nodePosition.z 
       << " - " << tagToSend.GetNNeighbors() << " neighbor(s)" << std::endl;
+    break;
+  case 2:
+    cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Sent Trap to "
+      << destinyIP << " from position x: " << nodePosition.x << " y: " << nodePosition.y << " z: " << nodePosition.z 
+      << " - " << tagToSend.GetNNeighbors() << " neighbor(s)" << std::endl;
+    break;
+  case 3:
+    cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Sent Special Identification to "
+      << destinyIP << " from position x: " << nodePosition.x << " y: " << nodePosition.y << " z: " << nodePosition.z 
+      << " - " << tagToSend.GetNNeighbors() << " neighbor(s)" << std::endl;
+    break;
+  
+  default:
+    break;
+  }
   
   PrintMyNeighborList();
 
-  packet->AddPacketTag(tagToSend);
+  /** 
+   * @author Vinicius - MiM
+   * @note Encrypted Tag addition to Trap message if defense mechanism is active
+   * @date Nov 19, 2025  
+   */
+  if (m_defense && tagValue == 2) {
+      std::string key = GetNode()->GetSharedKey(destinyIP);
+      if (!key.empty()) {
+          std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Sending Encrypted Trap to " << destinyIP << std::endl;
+          packet->AddPacketTag(tagToSend, key, nonce);
+      } 
+      // Else case should not happen, because shared key is created during handshake
+      else {
+        socket->Close();
+        std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - ERROR: Shared key with " << destinyIP << " not found! Message not sent." << std::endl;
+        return;
+      }
+  } 
+  else {
+      packet->AddPacketTag(tagToSend);
+  }
+
+  //packet->AddPacketTag(tagToSend); // Vinicius - MiM - Nov 19, 2025
   socket->Send(packet);
   socket->Close();
 }

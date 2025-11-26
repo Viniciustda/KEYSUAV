@@ -5,6 +5,7 @@
 #include "ns3/log.h"
 #include "ns3/node.h"
 #include "ns3/packet-socket-address.h"
+#include "ns3/random-variable-stream.h"
 #include "ns3/string.h"
 
 //#include "flysafe-tag.h"
@@ -32,7 +33,7 @@ public:
   static TypeId GetTypeId(void);
   FlySafePacketSink();
   virtual ~FlySafePacketSink();
-  void Setup(Address addressTo, uint32_t protocolId, double maliciousTime);
+  void Setup(Address addressTo, uint32_t protocolId, double maliciousTime, bool defense); // Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
 
   /**
   * @brief Struct to store infos from a neighbor node
@@ -168,6 +169,8 @@ private:
   string m_myId;                  //!< store competence + interests
   Address m_node;                 //!< Application node address
   Ipv4Address m_nodeIP;           //!< Node's IPv4 Address
+  bool m_defense;                 //!< True if defense mechanism is active  -  Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
+
   /** 
    * @author Vinicius - MiM
    * @note Reason for comment: Malicious UAV Implementation - Used for injection of fake data

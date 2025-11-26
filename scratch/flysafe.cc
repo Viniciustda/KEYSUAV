@@ -212,13 +212,13 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
     }
   }
 
-  NS_LOG_INFO("FlySafe - Setting parameters to " + label + " mode ...");
+  NS_LOG_INFO("FlySafe - Setting parameters to " + label + " mode...");
 
   //----------------------------------------------------------------------------------
   // Set wifi network - Ad Hoc
   //----------------------------------------------------------------------------------
 
-  NS_LOG_INFO("FlySafe - Configuring wifi network (Ad Hoc) ...");
+  NS_LOG_INFO("FlySafe - Configuring wifi network (Ad Hoc)...");
 
   // Create wifi network 802.11a
 
@@ -293,7 +293,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
   // Install applications
   //----------------------------------------------------------------------------------
 
-  NS_LOG_INFO("FlySafe - Install applications ...");
+  NS_LOG_INFO("FlySafe - Install applications...");
 
   //----------------------------------------------------------------------------------
   // Setting all nodes as honest
@@ -319,7 +319,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
   //std::vector<int> malicious = GenerateMaliciousNodes(nNodes, nMalicious);
   std::vector<int> malicious = GenerateMaliciousNodes(Nodes, nMalicious);
   fileSim << "Malicious nodes: " << convertIntVectorToString(malicious) << endl << endl;
-  NS_LOG_INFO("FlySafe - Generate and set malicious nodes ...");
+  NS_LOG_INFO("FlySafe - Generate and set malicious nodes...");
 
   for(i=0; i < nMalicious; i++) {
      Nodes.Get(malicious[i])->SetState(1);
@@ -333,7 +333,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
   Address SinkBroadAddress(InetSocketAddress(Ipv4Address::GetAny(),
                                              port)); // SinkAddress for messages
   
-  NS_LOG_INFO("FlySafe - Install Sink application ...");
+  NS_LOG_INFO("FlySafe - Install Sink application...");
 
   //cout << "FlySafePacketSink - Address: " << Ipv4Address::GetAny() << endl;
 
@@ -360,7 +360,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
       SinkApp->Setup(SinkBroadAddress, 1, 6.0); // 1 -> UDP, 2 -> TCP
       //cout << "PacketSink - Configure node " << i << " malicious start time!"  << endl;
     }*/
-    SinkApp->Setup(SinkBroadAddress, 1, 9999.99); // Vinicius - MiM - All nodes are ordinary
+    SinkApp->Setup(SinkBroadAddress, 1, 9999.99, defense); // Vinicius - MiM - All nodes are ordinary / set defense active or not
     i++;
   }
 
@@ -371,7 +371,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
 
   // Install OnOff in all nodes
 
-  NS_LOG_INFO("FlySafe - Install OnOff application ...");
+  NS_LOG_INFO("FlySafe - Install OnOff application...");
   
   i = 0;
   for (it = Nodes.Begin(); it != Nodes.End(); it++) {
@@ -394,7 +394,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
       //cout << "OnOff - Configure node " << i << " malicious start time!"  << endl;
     }*/
     OnOffApp->Setup(InetSocketAddress(Ipv4Address("255.255.255.255"), 9),
-                    1, 9999.99); // Vinicius - MiM - All nodes are ordinary
+                    1, 9999.99, defense); // Vinicius - MiM - All nodes are ordinary / set defense active or not
     i++;
 
     // Set to send to broadcast address
@@ -422,7 +422,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
   //----------------------------------------------------------------------------------
 
   // Create a file and save simulation scenario data
-  NS_LOG_INFO("FlySafe - Saving simulation scenario data to " + tracesFolder + " ...");
+  NS_LOG_INFO("FlySafe - Saving simulation scenario data to " + tracesFolder + "...");
 
 
   CreateSimScenarioFile(scenarioSimFile.c_str(), simDate, fileSim.str());
@@ -431,7 +431,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
   //----------------------------------------------------------------------------------
   // Callback configuration
   //----------------------------------------------------------------------------------
-  NS_LOG_INFO("FlySafe - Configuring callbacks ...");
+  NS_LOG_INFO("FlySafe - Configuring callbacks...");
 
   // Callback Trace to Collect data from FlySafePacketSink Application
   // Installed in all nodes
@@ -531,7 +531,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
   */
   if (!malicious.empty()) { 
       
-      NS_LOG_INFO("FlySafe - Configuring " << malicious.size() << " designated malicious node(s) as sniffer(s) ...");
+      NS_LOG_INFO("FlySafe - Configuring " << malicious.size() << " designated malicious node(s) as sniffer(s)...");
       cout << endl;
       for (int snifferNodeId : malicious) {
         
@@ -569,7 +569,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
   // Start / Stop simulation
   //----------------------------------------------------------------------------------
 
-  NS_LOG_INFO("FlySafe - Starting Simulation ...");
+  NS_LOG_INFO("FlySafe - Starting Simulation...");
   Simulator::Stop(Seconds(stop));
   Simulator::Run();
   Simulator::Destroy();

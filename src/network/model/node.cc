@@ -1461,4 +1461,93 @@ Node::CreateSharedKey(Ipv4Address neighborIp, const std::string& neighborPubKey)
 
 }
 
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 14, 2025
+ * 
+ * @brief Add a neighbor node to the handshake list
+ * 
+ * @param ip The IPv4 address of the neighbor node
+ */
+void
+Node::AddHandshakeNeighbor (Ipv4Address ip)
+{
+  NS_LOG_FUNCTION (this << ip);
+  m_handshakeNeighbors[ip] = 3;
+}
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 14, 2025
+ * 
+ * @brief Remove a neighbor node from the handshake list
+ * 
+ * @param ip The IPv4 address of the neighbor node
+ */
+void
+Node::RemoveHandshakeNeighbor (Ipv4Address ip)
+{
+  NS_LOG_FUNCTION (this << ip);
+  m_handshakeNeighbors.erase(ip);
+}
+
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 14, 2025
+ * 
+ * @brief Check if a neighbor node is in the handshake list
+ * 
+ * @param ip The IPv4 address of the neighbor node
+ */
+bool
+Node::IsHandshakeNeighbor (Ipv4Address ip) const
+{
+  NS_LOG_FUNCTION (this << ip);
+  auto it = m_handshakeNeighbors.find(ip);
+  return (it != m_handshakeNeighbors.end());
+}
+
+std::set<Ipv4Address>
+Node::GetHandshakeNeighbors () const
+{
+  std::set<Ipv4Address> ipList;
+  for (auto const& element : m_handshakeNeighbors)
+    {
+      ipList.insert(element.first); 
+    }
+
+  return ipList;
+}
+
+void 
+Node::DecreaseHandshakeQuality()
+{
+  for (auto it = m_handshakeNeighbors.begin(); it != m_handshakeNeighbors.end(); ++it) {
+      if (it->second > 0) {
+          it->second--;
+      }
+  }
+}
+
+void 
+Node::CleanHandshakeList()
+{
+  for (auto it = m_handshakeNeighbors.begin(); it != m_handshakeNeighbors.end(); ) {
+      if (it->second == 0) {
+          it = m_handshakeNeighbors.erase(it);
+      } else {
+          ++it;
+      }
+  }
+}
+
+bool
+Node::IsThereAnyHandshakeNeighbor (void) const
+{
+  return !m_handshakeNeighbors.empty();
+}
+
 } // namespace ns3

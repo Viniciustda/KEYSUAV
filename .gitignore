@@ -28,6 +28,14 @@
 !/src/network/model/
 !/src/network/model/node.h
 !/src/network/model/node.cc
+!/src/network/model/packet.h
+!/src/network/model/packet.cc
+!/src/network/model/packet-tag-list.h
+!/src/network/model/packet-tag-list.cc
+!/src/network/model/tag-buffer.h
+!/src/network/model/tag-buffer.cc
+!/src/network/model/tag.h
+!/src/network/model/tag.cc
 
 # Manter seu script de simulação em scratch/
 !/scratch/

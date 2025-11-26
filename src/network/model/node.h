@@ -24,6 +24,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 
 #include "ns3/object.h"
 #include "ns3/callback.h"
@@ -284,13 +285,21 @@ public:
   void ClearMaliciousNodeList ();
 
   // ---------------------------------------------------------------------
-  // Vinicius - MiM - 11 nov 25 - Methods for criptography
+  // Vinicius - MiM - 11 nov 25 - Methods for cryptography
   // ---------------------------------------------------------------------
   void SetPublicKey(std::string pubKey);
   std::string GetPublicKey() const;
   void SetPrivateKey(std::string privKey);
   void CreateSharedKey (Ipv4Address neighborIp, const std::string& neighborPubKey);
   std::string GetSharedKey(Ipv4Address neighborIp) const;
+
+  void AddHandshakeNeighbor (Ipv4Address ip);
+  void RemoveHandshakeNeighbor (Ipv4Address ip);
+  bool IsHandshakeNeighbor (Ipv4Address ip) const;
+  bool IsThereAnyHandshakeNeighbor (void) const;
+  std::set<Ipv4Address> GetHandshakeNeighbors () const;
+  void DecreaseHandshakeQuality();
+  void CleanHandshakeList();
 
 protected:
   /**
@@ -406,18 +415,20 @@ private:
   u_int8_t m_state;                             //!< Store node state (0 ordinary, 1 malicious)
 
   // ---------------------------------------------------------------------
-  // Vinicius - MiM - 11 nov 25 - Methods for criptography
+  // Vinicius - MiM - 11 nov 25 - Methods for cryptography
   // ---------------------------------------------------------------------
   void AddSharedKey(Ipv4Address neighborIp, std::string sharedKey);
   bool HasSharedKey(Ipv4Address neighborIp) const;
   std::string Kdf (const std::string& inputSecret) const;
 
   // ---------------------------------------------------------------------
-  // Vinicius - MiM - 11 nov 25 - Attributes for criptography
+  // Vinicius - MiM - 11 nov 25 - Attributes for cryptography
   // ---------------------------------------------------------------------
   std::string m_publicKey;                          //!< Public key
   std::string m_privateKey;                         //!< Private key
   std::map<Ipv4Address, std::string> m_sharedKeys;  //!< Shared keys map
+
+  std::map<Ipv4Address, uint8_t> m_handshakeNeighbors;  //!< Handshake neighbors list 
 };
 
 

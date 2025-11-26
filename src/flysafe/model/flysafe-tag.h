@@ -6,6 +6,9 @@
 #include "ns3/vector.h"
 #include "ns3/ipv4.h"
 
+#include "ns3/crypto_aead.h"
+#include "ns3/api.h"
+
 using namespace std;
 
 namespace ns3 {
@@ -20,6 +23,11 @@ public:
   virtual void Print(ostream &os) const;
   void SetSimpleValue(uint8_t value);
   uint8_t GetSimpleValue(void) const;
+
+  // Vinicius - MiM - Nov 17, 2025
+  virtual uint32_t GetSerializedSize(const std::string& key, const std::string& nonce) const;
+  virtual void Serialize(TagBuffer i, const std::string& key, const std::string& nonce) const;
+  virtual bool Deserialize(TagBuffer i, const std::string& key, const std::string& nonce);
 
   //These are custom accessor
 	Vector GetPosition(void);                     //!< Get nodes position
