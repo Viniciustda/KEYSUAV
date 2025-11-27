@@ -1510,6 +1510,13 @@ Node::IsHandshakeNeighbor (Ipv4Address ip) const
   return (it != m_handshakeNeighbors.end());
 }
 
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 24, 2025
+ * 
+ * @brief Return Handshake neighbors list
+ */
 std::set<Ipv4Address>
 Node::GetHandshakeNeighbors () const
 {
@@ -1522,6 +1529,13 @@ Node::GetHandshakeNeighbors () const
   return ipList;
 }
 
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 24, 2025
+ * 
+ * @brief Decrease Handshake neighbors quality
+ */
 void 
 Node::DecreaseHandshakeQuality()
 {
@@ -1532,6 +1546,13 @@ Node::DecreaseHandshakeQuality()
   }
 }
 
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 24, 2025
+ * 
+ * @brief Clean Handshake neighbors list
+ */
 void 
 Node::CleanHandshakeList()
 {
@@ -1544,6 +1565,13 @@ Node::CleanHandshakeList()
   }
 }
 
+/**
+ * @author Vinicius - MiM
+ * 
+ * @date Nov 24, 2025
+ * 
+ * @brief Check if exist any Handshake neighbor
+ */
 bool
 Node::IsThereAnyHandshakeNeighbor (void) const
 {
