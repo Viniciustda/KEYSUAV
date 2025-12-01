@@ -360,7 +360,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
       SinkApp->Setup(SinkBroadAddress, 1, 6.0); // 1 -> UDP, 2 -> TCP
       //cout << "PacketSink - Configure node " << i << " malicious start time!"  << endl;
     }*/
-    SinkApp->Setup(SinkBroadAddress, 1, 9999.99, defense); // Vinicius - MiM - All nodes are ordinary / set defense active or not
+    SinkApp->Setup(SinkBroadAddress, 1, 9999.99, defense, 20.0, 115.0); // Vinicius - MiM - All nodes are ordinary / set defense active or not
     i++;
   }
 

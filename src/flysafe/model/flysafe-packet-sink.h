@@ -33,8 +33,8 @@ public:
   static TypeId GetTypeId(void);
   FlySafePacketSink();
   virtual ~FlySafePacketSink();
-  void Setup(Address addressTo, uint32_t protocolId, double maliciousTime, bool defense); // Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
-
+  void Setup(Address addressTo, uint32_t protocolId, double maliciousTime, bool defense, double maxSpeed, double maxCoverage);  // Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
+                                                                                                                                // Vinicius - MiM - Nov 26, 2025 - Mitigating MiM
   /**
   * @brief Struct to store infos from a neighbor node
   * @date 25022023
@@ -155,7 +155,28 @@ private:
    */
   //void NotifyNeighbors(Ipv4Address maliciousIP, Vector position, uint8_t state, uint8_t tagValue);
 
+  /**
+   * @author Vinicius - MiM
+   * 
+   * @date Nov 26, 2025
+   * 
+   * @brief Verify anomaly
+   * 
+   * @param neighborIP
+   * @param reportedPos
+   * @param msgTime
+   * @param myPos
+   */
+  bool CheckAnomaly(Ipv4Address neighborIP, Vector reportedPos, double msgTime,  double distDiference, double timeNow);
+
 //}
+
+  // ---------------------------------------------------------------------
+  // Vinicius - MiM - Nov 26, 2025 - Mitigating MiM
+  // ---------------------------------------------------------------------
+  double MIN_PACKET_INTERVAL = 0.1;
+  double m_maxUavSpeed; // m/s
+  double m_maxUavCoverage; // Meters 
 
   // inherited from Application base class.
   Address m_local;                //!< Local address to bind to

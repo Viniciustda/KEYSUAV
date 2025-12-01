@@ -390,7 +390,7 @@ Node::NotifyDeviceAdded (Ptr<NetDevice> device)
  */
 
 void
-Node::RegisterNeighbor (Ipv4Address ip, Vector position, double distance, uint8_t attitude, uint8_t quality, uint8_t hop, uint8_t state) //, double time)
+Node::RegisterNeighbor (Ipv4Address ip, Vector position, double distance, uint8_t attitude, uint8_t quality, uint8_t hop, uint8_t state, double time)
 {
   NS_LOG_FUNCTION (this);
   struct Node::Neighbor neighbor;
@@ -402,7 +402,7 @@ Node::RegisterNeighbor (Ipv4Address ip, Vector position, double distance, uint8_
   neighbor.quality = quality;
   neighbor.hop = hop;
   neighbor.state = state;
-  //neighbor.infoTime = time;
+  neighbor.msgTime = time;
   m_neighborList.push_back (neighbor);
 }
 
@@ -456,7 +456,7 @@ Node::UnregisterNeighbor (Ipv4Address ip)
  */
 void
 Node::UpdateNeighbor (Ipv4Address ip, Vector position, double distance, 
-                      uint8_t attitude, uint8_t quality, uint8_t hop) //, uint8_t state) //, double time)
+                      uint8_t attitude, uint8_t quality, uint8_t hop, double time) //, uint8_t state)
 {
   NS_LOG_FUNCTION (this);
   for (NeighborHandlerList::iterator i = m_neighborList.begin (); i != m_neighborList.end ();
@@ -470,7 +470,7 @@ Node::UpdateNeighbor (Ipv4Address ip, Vector position, double distance,
           (*i).quality = quality;
           (*i).hop = hop;
           //(*i).state = state;     
-          //(*i).infoTime = time;          
+          (*i).msgTime = time;          
           break;
         }
     }
@@ -709,24 +709,21 @@ Node::SetNeighborNodeState (Ipv4Address ip, uint8_t state)
  * @return uint8_t - Neighbor node information time
  */
 
-/*
 double
 Node::GetNeighborInfoTime (Ipv4Address ip)
 {
-  double time;
+  double time = 0.0;
   NS_LOG_FUNCTION (this);
   for (NeighborHandlerList::iterator i = m_neighborList.begin (); i != m_neighborList.end (); i++)
     {
       if (i->ip == ip) 
       {
-        time = i->infoTime; 
+        time = i->msgTime; 
         break;
       }
     }
   return time;
 }
-*/
-
 
 /**
  * @brief Set the information time of a neighbor node
@@ -735,7 +732,7 @@ Node::GetNeighborInfoTime (Ipv4Address ip)
  * @param ip - Neighbor node IPv4 address
  * @param hop - Neighbor node new information Time
  */
-/*
+
 void
 Node::SetNeighborInfoTime (Ipv4Address ip, double time)
 {
@@ -744,12 +741,11 @@ Node::SetNeighborInfoTime (Ipv4Address ip, double time)
     {
       if (i->ip == ip) 
       {
-        i->infoTime = time; 
+        i->msgTime = time; 
         break;
       }
     }
 }
- */
 
 /**
  * @brief Verify if node has neighbors

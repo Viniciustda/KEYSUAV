@@ -235,9 +235,9 @@ public:
    */
 
 
-  void RegisterNeighbor (Ipv4Address ip, Vector position, double distance, u_int8_t attitude, u_int8_t quality, uint8_t hop, uint8_t state); //, double time);
+  void RegisterNeighbor (Ipv4Address ip, Vector position, double distance, u_int8_t attitude, u_int8_t quality, uint8_t hop, uint8_t state, double time);
   void UnregisterNeighbor (Ipv4Address ip);
-  void UpdateNeighbor (Ipv4Address ip, Vector position, double distance, uint8_t attitude, uint8_t quality, uint8_t hop); //, uint8_t state); //, double time);
+  void UpdateNeighbor (Ipv4Address ip, Vector position, double distance, uint8_t attitude, uint8_t quality, uint8_t hop, double time); //, uint8_t state);
   Vector GetNeighborPosition (Ipv4Address ip);
   double GetNeighborDistance (Ipv4Address ip);
   uint8_t GetNeighborAttitude (Ipv4Address ip);
@@ -248,8 +248,8 @@ public:
   void SetNeighborHop (Ipv4Address ip, uint8_t hop);
   uint8_t GetNeighborNodeState (Ipv4Address ip);
   void SetNeighborNodeState (Ipv4Address ip, uint8_t state);
-  //double GetNeighborInfoTime (Ipv4Address ip);
-  //void SetNeighborInfoTime (Ipv4Address ip, double time);
+  double GetNeighborInfoTime (Ipv4Address ip);
+  void SetNeighborInfoTime (Ipv4Address ip, double time);
 
   bool IsThereAnyNeighbor ();
   bool IsThereAnyNeighbor (uint8_t hop);
@@ -395,7 +395,7 @@ private:
     uint8_t quality;  //!< 0 - 2 controls neighbor absence in the list
     uint8_t hop;      //!< hop = 1 means neibhor in range, 
     uint8_t state;    //!< 0 ordinary, 1 malicious
-    //double msgTime;   //!< message send time 
+    double msgTime;   //!< message send time 
   }; 
 
   struct MaliciousNode

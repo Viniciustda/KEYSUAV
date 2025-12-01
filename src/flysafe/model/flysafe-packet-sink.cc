@@ -1,4 +1,6 @@
 #include "flysafe-packet-sink.h"
+#include <algorithm>
+#include <cmath>
 
 namespace ns3 {
 
@@ -48,6 +50,8 @@ FlySafePacketSink::FlySafePacketSink() {
   NS_LOG_FUNCTION(this);
   m_socket = 0;
   m_totalRx = 0;
+  m_maxUavSpeed = 20.0;
+  m_maxUavCoverage = 115.0;
 }
 
 FlySafePacketSink::~FlySafePacketSink() { 
@@ -60,7 +64,7 @@ FlySafePacketSink::~FlySafePacketSink() {
  * @param toAddress IPv4 address to bind to
  * @param protocolId Type of protocol to be used to (1 - UDP, 2 - TCP)
  */
-void FlySafePacketSink::Setup(Address toAddress, uint32_t protocolId, double maliciousTime, bool defense) {
+void FlySafePacketSink::Setup(Address toAddress, uint32_t protocolId, double maliciousTime, bool defense, double maxSpeed, double maxCoverage) {
 
   NS_LOG_FUNCTION(this);
   m_node = GetNodeIpAddress();
@@ -69,7 +73,9 @@ void FlySafePacketSink::Setup(Address toAddress, uint32_t protocolId, double mal
   m_socket = 0;
   m_totalRx = 0;
 
-  m_defense = defense; // Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
+  m_defense = defense;              // Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
+  m_maxUavSpeed = maxSpeed;         // Vinicius - MiM - Nov 26, 2025 - Mitigating MiM
+  m_maxUavCoverage = maxCoverage;   // Vinicius - MiM - Nov 26, 2025 - Mitigating MiM
 
   Ptr<Node> ThisNode = this->GetNode();
 
@@ -162,7 +168,7 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
   Vector nodePosition;    // Store node position
   vector<Ipv4Address> neighborList; // Store node neighbors list 
   std::vector<FlySafePacketSink::NeighInfos> neighborListVector; // Store node NL
-  double timeNow;
+  double timeNow = Simulator::Now().GetSeconds();
   int nNeigh; // Store number of neigbhors in the node neighbors list
   //uint8_t nState; // neighbor operation state (0 ordinary, 1 suspect)
 
@@ -249,14 +255,14 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
              tagFound = packet->PeekPacketTag(receivedTag, sharedKey, nonceReceived);
              
              if (tagFound) {
-                 std::cout << m_nodeIP << " : " << Simulator::Now().GetSeconds() 
+                 std::cout << m_nodeIP << " : " << timeNow 
                            << " FlySafePacketSink - [SEC] Decrypted Trap message from " << neighIP << std::endl << std::endl;
              } else {
-                 std::cout << m_nodeIP << " : " << Simulator::Now().GetSeconds() 
+                 std::cout << m_nodeIP << " : " << timeNow 
                            << " FlySafePacketSink - [SEC] Failed to decrypt Trap from " << neighIP << std::endl << std::endl;
              }
           } else {
-             std::cout << m_nodeIP << " : " << Simulator::Now().GetSeconds() 
+             std::cout << m_nodeIP << " : " << timeNow 
                     << " FlySafePacketSink - [SEC] No Shared Key for " << neighIP 
                     << ". Sending Hello (Tag 0) to force Handshake!" << std::endl;
 
@@ -280,7 +286,7 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
       }
 
       if (receivedTag.GetSimpleValue() == 255) {
-          std::cout << m_nodeIP << " : " << Simulator::Now().GetSeconds() 
+          std::cout << m_nodeIP << " : " << timeNow
                     << " FlySafePacketSink - Packet ignored due to invalid/encrypted content (Tag 255)." << std::endl;
            delete[] buffer;
            continue; 
@@ -292,7 +298,7 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
       numberNNeighbors = receivedTag.GetNNeighbors();
       neighInfosVectorTag = receivedTag.GetNeighInfosVector(); // Get the NL from the received tag
       
-      std::cout << m_nodeIP << " : " << Simulator::Now().GetSeconds() 
+      std::cout << m_nodeIP << " : " << timeNow 
                             << " FlySafePacketSink - NL recovered from received packet from "
                             << neighIP << ", tag " <<  (int)receivedTag.GetSimpleValue()
                             << " and with " << (int)numberNNeighbors 
@@ -304,8 +310,6 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
       
       oldDistance = ThisNode->GetNeighborDistance (neighIP); // Get the old neighbor node distance from this node 
       neighAttitude = CheckNeighAttitude(distance, oldDistance);      
-      
-      timeNow = Simulator::Now().GetSeconds();
 
       /** 
        * @author Vinicius - MiM
@@ -406,6 +410,14 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
       PrintMyNeighborList();
       PrintMySupiciousList();
 
+      // Vinicius - MiM - Nov 26, 2025 - Verify Anomaly
+      if (CheckAnomaly(neighIP, position, receivedTag.GetMessageTime(), value, timeNow)) {
+        std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - [SEC] Packet from " << neighIP 
+                    << " discarded due to behavioral anomaly." << std::endl;
+          //delete[] buffer;
+          //continue; 
+      }
+
       // Decrease the number of neighbors in NL due to a previous register during malicious nodes analsys 
       if (suspiciousRegistered && nNeigh > 0){
         nNeigh -= 1;
@@ -482,12 +494,12 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
                 cout << m_nodeIP << " : " << timeNow << " " << neighIP << " is already my neighbor!" << std::endl;
                 cout << m_nodeIP << " : " << timeNow << " Updated " << neighIP <<  " position!" << std::endl;
                 
-                ThisNode->UpdateNeighbor(neighIP, position, distance, neighAttitude, 3, 1);  
+                ThisNode->UpdateNeighbor(neighIP, position, distance, neighAttitude, 3, 1, receivedTag.GetMessageTime());  
             }
             else { // Put neighbor node in my neighbors list
                 cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
                     << " in my neighbors list" << std::endl;
-                ThisNode->RegisterNeighbor(neighIP, position, distance, 0, 3, 1, 0);    
+                ThisNode->RegisterNeighbor(neighIP, position, distance, 0, 3, 1, 0, receivedTag.GetMessageTime());    
             }
             
             if(numberNNeighbors != 0){
@@ -546,12 +558,12 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
                   << " in my neighbors list" << std::endl;
             }
             else if (ThisNode->IsAlreadyNeighbor(neighIP)){
-              ThisNode->UpdateNeighbor(neighIP,position, distance, neighAttitude, 3, 1);
+              ThisNode->UpdateNeighbor(neighIP,position, distance, neighAttitude, 3, 1, receivedTag.GetMessageTime());
               cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Updated " << neighIP 
                   << " in my neighbors list" << std::endl;
             }
             else {
-              ThisNode->RegisterNeighbor(neighIP,position,distance,neighAttitude,3, 1, 0);
+              ThisNode->RegisterNeighbor(neighIP,position,distance,neighAttitude,3, 1, 0, receivedTag.GetMessageTime());
               cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
                   << " in my neighbors list" << std::endl;
             }
@@ -596,12 +608,12 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
           if (m_defense) {
             if (ThisNode->IsHandshakeNeighbor(neighIP)) {
               ThisNode->RemoveHandshakeNeighbor(neighIP);
-              ThisNode->RegisterNeighbor(neighIP,position,distance,neighAttitude,3,1, 0);
+              ThisNode->RegisterNeighbor(neighIP,position,distance,neighAttitude,3,1, 0, receivedTag.GetMessageTime());
               cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
                   << " in my neighbors list" << std::endl;
             }
             else if (ThisNode->IsAlreadyNeighbor(neighIP)) {
-              ThisNode->UpdateNeighbor(neighIP,position, distance, neighAttitude, 3, 1);
+              ThisNode->UpdateNeighbor(neighIP,position, distance, neighAttitude, 3, 1, receivedTag.GetMessageTime());
               cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Updated " << neighIP 
                   << " location in my neighbors list" << std::endl; 
             }
@@ -616,12 +628,12 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
                   << " in my neighbors list" << std::endl;
             }
             else if (!ThisNode->IsAlreadyNeighbor(neighIP)){
-              ThisNode->RegisterNeighbor(neighIP,position,distance,neighAttitude,3,1, 0);
+              ThisNode->RegisterNeighbor(neighIP,position,distance,neighAttitude,3,1, 0, receivedTag.GetMessageTime());
               cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
                   << " in my neighbors list" << std::endl;
             }
             else {
-              ThisNode->UpdateNeighbor(neighIP,position, distance, neighAttitude, 3, 1);
+              ThisNode->UpdateNeighbor(neighIP,position, distance, neighAttitude, 3, 1, receivedTag.GetMessageTime());
               cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Updated " << neighIP 
                   << " location in my neighbors list" << std::endl; 
             }
@@ -710,12 +722,12 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
                 cout << m_nodeIP << " : " << timeNow << " " << neighIP << " is already my neighbor!" << std::endl;
                 cout << m_nodeIP << " : " << timeNow << " Updated " << neighIP <<  " position!" << std::endl;
                 
-                ThisNode->UpdateNeighbor(neighIP, position, distance, neighAttitude, 3, 1); 
+                ThisNode->UpdateNeighbor(neighIP, position, distance, neighAttitude, 3, 1, receivedTag.GetMessageTime()); 
             }
             else { // Put neighbor node in my neighbors list
                 cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - Registered " << neighIP 
                       << " in my neighbors list" << std::endl;
-                ThisNode->RegisterNeighbor(neighIP, position, distance, 0, 3, 1, 0);    
+                ThisNode->RegisterNeighbor(neighIP, position, distance, 0, 3, 1, 0, receivedTag.GetMessageTime());    
             }
             
             if(numberNNeighbors != 0){
@@ -1161,7 +1173,7 @@ void FlySafePacketSink::UpdateMyNeighborList(std::vector<ns3::MyTag::NeighInfos>
           neighAttitude = CheckNeighAttitude(distance,ThisNode->GetNeighborDistance(n.ip));
           // update neighbor list
           ThisNode->UpdateNeighbor(n.ip, neighPosition, distance, neighAttitude,1, 
-                                   std::min((hop + 1), (int)ThisNode->GetNeighborHop(n.ip)));
+                                   std::min((hop + 1), (int)ThisNode->GetNeighborHop(n.ip)), ThisNode->GetNeighborInfoTime(n.ip));
           std::cout << m_nodeIP << " : " << Simulator::Now().GetSeconds() 
             << " FlySafePacketSink - Updated neighbor " << n.ip 
             << " infomation. Choose hop " << (int)std::min(hop + 1, (int)ThisNode->GetNeighborHop(n.ip)) 
@@ -1179,7 +1191,7 @@ void FlySafePacketSink::UpdateMyNeighborList(std::vector<ns3::MyTag::NeighInfos>
       }
       else {
         // register new node in the list with the received hop plus 1
-        ThisNode->RegisterNeighbor(n.ip, neighPosition, distance, 0, 1, hop + 1, 0);
+        ThisNode->RegisterNeighbor(n.ip, neighPosition, distance, 0, 1, hop + 1, 0, 0.0);
       }
     }
   }
@@ -1425,7 +1437,108 @@ vector<ns3::MyTag::NeighborFull> FlySafePacketSink::GetNeighborIpListFull() {
 // End NotifyNeighbors
 }*/
 
+/**
+   * @author Vinicius - MiM
+   * 
+   * @date Nov 26, 2025
+   * 
+   * @brief Verify anomaly
+   * 
+   * @param neighborIP
+   * @param reportedPos
+   * @param msgTime
+   * @param myPos
+   */
+  bool FlySafePacketSink::CheckAnomaly(Ipv4Address neighborIP,
+                     Vector reportedPos,
+                     double msgTime,
+                     double distDiference,
+                     double timeNow) {
+    Ptr<Node> ThisNode = this->GetNode();
 
+    // Coverage Area
+    if (distDiference > m_maxUavCoverage) {
+      std::cout << m_nodeIP << " : " << timeNow
+            << " FlySafePacketSink - [SEC] Anomaly Detected (Impossible Coverage): Node "
+            << neighborIP << " claims to be " << distDiference << "m away but node " << m_nodeIP
+            << " received the packet, even though his coverage area is " << m_maxUavCoverage
+            << " meters." << std::endl;
+      return true;
+    }
+
+    if (!ThisNode->IsAlreadyNeighbor(neighborIP)) {
+      return false;
+    }
+
+    double lastMsgTime = ThisNode->GetNeighborInfoTime(neighborIP);
+    Vector oldPos = ThisNode->GetNeighborPosition(neighborIP);
+
+    // Outdated Message 
+    std::cout << m_nodeIP << " : " << timeNow << "Last Msg Time: " << lastMsgTime << " | Msg Time: " << msgTime << std::endl;
+    if (msgTime < lastMsgTime) {
+      std::cout << m_nodeIP << " : " << timeNow
+            << " FlySafePacketSink - [SEC] Anomaly Detected (Outdated): Message time " 
+            << msgTime << " is older than last accepted message " << lastMsgTime << std::endl;
+      return true;
+    }
+
+    double distTraveled = CalculateNodesDistance(oldPos, reportedPos);
+    double tolerance = 1.15;
+
+    // Replay / Conflict (Same Timestamp)
+    if (msgTime == lastMsgTime) {
+        if (oldPos == reportedPos) {
+             std::cout << m_nodeIP << " : " << timeNow
+            << " FlySafePacketSink - [SEC] Anomaly Detected (Replay): Duplicate message. Old position: " << oldPos << " - Reported position: " << reportedPos << "; Old timestamp: " << lastMsgTime << " - Reported timestamp: " << msgTime << std::endl;
+             return true;
+        } else {
+             // Same time, different location -> Teleportation / Spoofing
+             std::cout << m_nodeIP << " : " << timeNow
+            << " FlySafePacketSink - [SEC] Anomaly Detected (Conflict): Two messages with same timestamp " 
+            << msgTime << " but different locations. Old position: " << oldPos << " - Reported position: " << reportedPos << "; The distance between them: " << distTraveled << "m." << std::endl;
+             return true;
+        }
+    }
+
+    // Replay / Conflict (Same Timestamp)
+    /*if (std::abs(msgTime - lastMsgTime) < 0.001) {
+        if (distTraveled < 0.1) {
+             std::cout << m_nodeIP << " : " << timeNow
+            << " FlySafePacketSink - [SEC] Anomaly Detected (Replay): Duplicate message. Old position: " << oldPos << " - Reported position: " << reportedPos << "; Old timestamp: " << lastMsgTime << " - Reported timestamp: " << msgTime << std::endl;
+             return true;
+        } else {
+             // Same time, different location -> Teleportation / Spoofing
+             std::cout << m_nodeIP << " : " << timeNow
+            << " FlySafePacketSink - [SEC] Anomaly Detected (Conflict): Two messages with same timestamp " 
+            << msgTime << " but different locations. The distance between them: " << distTraveled << "m." << std::endl;
+             return true;
+        }
+    }*/
+
+    // Speed / Teleportation (Different Timestamp)
+    double deltaMsg = msgTime - lastMsgTime;
+
+    if (deltaMsg < MIN_PACKET_INTERVAL) {
+      deltaMsg = MIN_PACKET_INTERVAL;
+    }
+
+    double maxPossibleDist = (m_maxUavSpeed * deltaMsg) * tolerance;
+    if (distTraveled > maxPossibleDist) {
+      if (deltaMsg <= MIN_PACKET_INTERVAL + 1e-6) {
+        std::cout << m_nodeIP << " : " << timeNow
+              << " FlySafePacketSink - [SEC] Anomaly Detected (Teleportation): Node " << neighborIP
+              << " jumped " << distTraveled << "m instantly" << std::endl;
+      } else {
+        std::cout << m_nodeIP << " : " << timeNow
+              << " FlySafePacketSink - [SEC] Anomaly Detected (Teleportation): Node " << neighborIP
+              << " moved " << distTraveled << "m in " << deltaMsg << "s. Max possible: "
+              << (m_maxUavSpeed * deltaMsg) << "m (Speed: " << m_maxUavSpeed << "m/s)" << std::endl;
+      }
+      return true;
+    }
+
+    return false;
+  }
 
 } // namespace ns3
 

@@ -533,7 +533,7 @@ ExecuteMiMAttack(Statistics* stats, Ptr<Node> snifferNode, Ptr<const Packet> pac
 
     // Enqueue the forged packet with the forged MAC header
     mac->GetTxop()->Queue(forgedPacket, forgedHdr);
-
+    
     // Print the MiM attack information
     double timeNow = Simulator::Now().GetSeconds();
     cout << snifferIp << " : " << timeNow << " MiM - Spoofing packet to " << receiverIp 
