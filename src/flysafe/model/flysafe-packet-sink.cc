@@ -64,7 +64,7 @@ FlySafePacketSink::~FlySafePacketSink() {
  * @param toAddress IPv4 address to bind to
  * @param protocolId Type of protocol to be used to (1 - UDP, 2 - TCP)
  */
-void FlySafePacketSink::Setup(Address toAddress, uint32_t protocolId, double maliciousTime, bool defense, double maxSpeed, double maxCoverage) {
+void FlySafePacketSink::Setup(Address toAddress, uint32_t protocolId, double maliciousTime, bool defense, bool mitigation, double maxSpeed, double maxCoverage) {
 
   NS_LOG_FUNCTION(this);
   m_node = GetNodeIpAddress();
@@ -74,6 +74,7 @@ void FlySafePacketSink::Setup(Address toAddress, uint32_t protocolId, double mal
   m_totalRx = 0;
 
   m_defense = defense;              // Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
+  m_mitigation = mitigation;        // Vinicius - MiM - Dec 01, 2025 - Set mitigation mechanism
   m_maxUavSpeed = maxSpeed;         // Vinicius - MiM - Nov 26, 2025 - Mitigating MiM
   m_maxUavCoverage = maxCoverage;   // Vinicius - MiM - Nov 26, 2025 - Mitigating MiM
 
@@ -411,11 +412,13 @@ void FlySafePacketSink::PacketReceived(Ptr<Socket> socket) {
       PrintMySupiciousList();
 
       // Vinicius - MiM - Nov 26, 2025 - Verify Anomaly
-      if (CheckAnomaly(neighIP, position, receivedTag.GetMessageTime(), value, timeNow)) {
-        std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - [SEC] Packet from " << neighIP 
-                    << " discarded due to behavioral anomaly." << std::endl;
-          //delete[] buffer;
-          //continue; 
+      if (m_mitigation) {
+        if (CheckAnomaly(receivedTag.GetSimpleValue(),neighIP, position, receivedTag.GetMessageTime(), value, timeNow)) {
+          std::cout << m_nodeIP << " : " << timeNow << " FlySafePacketSink - [SEC] Packet from " << neighIP 
+                      << " discarded due to behavioral anomaly." << std::endl << std::endl;
+            delete[] buffer;
+            continue; 
+        }
       }
 
       // Decrease the number of neighbors in NL due to a previous register during malicious nodes analsys 
@@ -1449,21 +1452,33 @@ vector<ns3::MyTag::NeighborFull> FlySafePacketSink::GetNeighborIpListFull() {
    * @param msgTime
    * @param myPos
    */
-  bool FlySafePacketSink::CheckAnomaly(Ipv4Address neighborIP,
+  bool FlySafePacketSink::CheckAnomaly(uint8_t tagValue,
+                     Ipv4Address neighborIP,
                      Vector reportedPos,
                      double msgTime,
                      double distDiference,
                      double timeNow) {
     Ptr<Node> ThisNode = this->GetNode();
 
-    // Coverage Area
-    if (distDiference > m_maxUavCoverage) {
+    // In defense mode, broadcast and identification messages do not contain position information
+    if (m_defense && (tagValue == 0 || tagValue == 1 || tagValue == 3) && reportedPos != Vector(0,0,0)) {
       std::cout << m_nodeIP << " : " << timeNow
-            << " FlySafePacketSink - [SEC] Anomaly Detected (Impossible Coverage): Node "
-            << neighborIP << " claims to be " << distDiference << "m away but node " << m_nodeIP
-            << " received the packet, even though his coverage area is " << m_maxUavCoverage
-            << " meters." << std::endl;
+            << " FlySafePacketSink - [SEC] Anomaly Detected (Spoofing): Node "
+            << neighborIP << " sent a message with tag " << (int)tagValue
+            << " in defense mode, but position information is present. | Reported position: " << reportedPos << std::endl;
       return true;
+    }
+    
+    // Coverage Area
+    if (!m_defense || !(tagValue == 0 || tagValue == 1 || tagValue == 3)) {
+      if ( distDiference > m_maxUavCoverage) {
+        std::cout << m_nodeIP << " : " << timeNow
+              << " FlySafePacketSink - [SEC] Anomaly Detected (Impossible Coverage): Node "
+              << neighborIP << " claims to be " << distDiference << "m away but node " << m_nodeIP
+              << " received the packet, even though his coverage area is " << m_maxUavCoverage
+              << " meters. | Reported position: " << reportedPos << std::endl;
+        return true;
+      }
     }
 
     if (!ThisNode->IsAlreadyNeighbor(neighborIP)) {
@@ -1472,18 +1487,21 @@ vector<ns3::MyTag::NeighborFull> FlySafePacketSink::GetNeighborIpListFull() {
 
     double lastMsgTime = ThisNode->GetNeighborInfoTime(neighborIP);
     Vector oldPos = ThisNode->GetNeighborPosition(neighborIP);
+    double distTraveled = CalculateNodesDistance(oldPos, reportedPos);
+    double tolerance = 1.15;
+    double deltaMsg = msgTime - lastMsgTime;
+
+    if (deltaMsg < MIN_PACKET_INTERVAL) {
+      deltaMsg = MIN_PACKET_INTERVAL;
+    }
 
     // Outdated Message 
-    std::cout << m_nodeIP << " : " << timeNow << "Last Msg Time: " << lastMsgTime << " | Msg Time: " << msgTime << std::endl;
     if (msgTime < lastMsgTime) {
       std::cout << m_nodeIP << " : " << timeNow
             << " FlySafePacketSink - [SEC] Anomaly Detected (Outdated): Message time " 
             << msgTime << " is older than last accepted message " << lastMsgTime << std::endl;
       return true;
     }
-
-    double distTraveled = CalculateNodesDistance(oldPos, reportedPos);
-    double tolerance = 1.15;
 
     // Replay / Conflict (Same Timestamp)
     if (msgTime == lastMsgTime) {
@@ -1500,40 +1518,21 @@ vector<ns3::MyTag::NeighborFull> FlySafePacketSink::GetNeighborIpListFull() {
         }
     }
 
-    // Replay / Conflict (Same Timestamp)
-    /*if (std::abs(msgTime - lastMsgTime) < 0.001) {
-        if (distTraveled < 0.1) {
-             std::cout << m_nodeIP << " : " << timeNow
-            << " FlySafePacketSink - [SEC] Anomaly Detected (Replay): Duplicate message. Old position: " << oldPos << " - Reported position: " << reportedPos << "; Old timestamp: " << lastMsgTime << " - Reported timestamp: " << msgTime << std::endl;
-             return true;
-        } else {
-             // Same time, different location -> Teleportation / Spoofing
-             std::cout << m_nodeIP << " : " << timeNow
-            << " FlySafePacketSink - [SEC] Anomaly Detected (Conflict): Two messages with same timestamp " 
-            << msgTime << " but different locations. The distance between them: " << distTraveled << "m." << std::endl;
-             return true;
-        }
-    }*/
-
     // Speed / Teleportation (Different Timestamp)
-    double deltaMsg = msgTime - lastMsgTime;
-
-    if (deltaMsg < MIN_PACKET_INTERVAL) {
-      deltaMsg = MIN_PACKET_INTERVAL;
-    }
-
-    double maxPossibleDist = (m_maxUavSpeed * deltaMsg) * tolerance;
+    double maxPossibleDist = 2.0f * m_maxUavSpeed * deltaMsg * tolerance;
     if (distTraveled > maxPossibleDist) {
-      if (deltaMsg <= MIN_PACKET_INTERVAL + 1e-6) {
-        std::cout << m_nodeIP << " : " << timeNow
-              << " FlySafePacketSink - [SEC] Anomaly Detected (Teleportation): Node " << neighborIP
-              << " jumped " << distTraveled << "m instantly" << std::endl;
-      } else {
-        std::cout << m_nodeIP << " : " << timeNow
-              << " FlySafePacketSink - [SEC] Anomaly Detected (Teleportation): Node " << neighborIP
-              << " moved " << distTraveled << "m in " << deltaMsg << "s. Max possible: "
-              << (m_maxUavSpeed * deltaMsg) << "m (Speed: " << m_maxUavSpeed << "m/s)" << std::endl;
-      }
+      
+      std::cout << m_nodeIP << " : " << timeNow
+            << " FlySafePacketSink - [SEC] Anomaly Detected (Teleportation): Node " << neighborIP
+            << " moved " << distTraveled << "m"
+            << " in " << deltaMsg << "s." 
+            << " Max possible: " << (maxPossibleDist) << "m" 
+            << " (Speed: 2x " << m_maxUavSpeed << "m/s (the two nodes can in opposite directions) x tolerance " << tolerance << ")"
+            << " | Old position: " << oldPos 
+            << " | Reported position: " << reportedPos 
+            << " | Old timestamp: " << lastMsgTime 
+            << " | Reported timestamp: " << msgTime << ")" << std::endl;
+    
       return true;
     }
 

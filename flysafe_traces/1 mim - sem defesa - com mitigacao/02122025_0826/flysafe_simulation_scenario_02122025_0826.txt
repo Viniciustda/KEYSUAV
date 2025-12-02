@@ -1,0 +1,26 @@
+**** FlySafe scenario configuration file ****
+
+Date: 02122025 - 08:26hs
+
+Start seed: 2433830197
+
+Security Defenses: Disabled
+
+Mitigation Mechanism: Enabled
+
+Mobility Model settings: ns3::RandomWalk2dMobilityModel
+Mode: Time
+Mode: 0.5s
+Speed: Min=20.0|Max=20.0
+Bounds: 0|1500|0|1500
+
+PositionAllocator settings: ns3::RandomBoxPositionAllocator
+X: Min=0.0|Max=1500.0
+Y: Min=0.0|Max=1500.0
+Z: Min=91.0|Max=91.0
+
+Mobility mode: Random Way Point only
+
+Malicious nodes: 26
+
+**** End of FlySafe scenario configuration file ****

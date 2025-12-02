@@ -605,9 +605,9 @@ ProcessSniffedPacket(Statistics* stats, Ptr<Node> snifferNode,
 
                 double timeNow = Simulator::Now().GetSeconds();
 
-                if (originalTag.GetSimpleValue() == 255) {
-                    std::cout << snifferIp << " : " << timeNow << " Sniffer - Detected encrypted/invalid tag (Val=255). Skipping." << endl << endl;
-                    return; 
+                if (originalTag.GetSimpleValue() > 6) {
+                    std::cout << snifferIp << " : " << timeNow << " Sniffer - Detected encrypted/invalid tag value (" << (int)originalTag.GetSimpleValue() << "). Skipping." << endl << endl;
+                    return;
                 }
                               
                 Vector senderPosition = originalTag.GetPosition();

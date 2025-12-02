@@ -1,0 +1,6 @@
+time	IPTx	msgTag	message
+696.804	192.168.1.11	1	Identification
+697	192.168.1.11	2	Trap
+698	192.168.1.11	2	Trap
+699	192.168.1.11	2	Trap
+807.001	192.168.1.11	0	Hello

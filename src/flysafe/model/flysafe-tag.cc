@@ -2,6 +2,7 @@
 #include "ns3/vector.h"
 #include <iomanip> 
 #include <sstream> 
+#include <cstring>
 
 /* ========================================================================
  * MyTag class
@@ -158,14 +159,21 @@ void MyTag::Serialize(TagBuffer i, const std::string& key, const std::string& no
     unsigned long long encryptedActualLen = 0;
 
     // Encrypt
-    crypto_aead_encrypt(encryptedBuffer, &encryptedActualLen,
+    int res = crypto_aead_encrypt(encryptedBuffer, &encryptedActualLen,
                         clearBuffer, clearSize,
                         NULL, 0, // associated data is null
 						NULL, // nsec
                         (const unsigned char*)nonce.c_str(),
                         (const unsigned char*)key.c_str());
 
-    std::cout << "Serialize (Encryption): Encrypted Size = " << encryptedActualLen << " bytes (Overhead: " << (encryptedActualLen - clearSize) << ")" << std::endl;
+    if (res != 0) {
+        std::cout << "MyTag::Serialize (Encryption): Encryption FAILED! res=" << res << std::endl;
+        // Fill with 0xFF to ensure Deserialize sees invalid magic number
+        std::memset(encryptedBuffer, 0xFF, encryptedMaxSize);
+        encryptedActualLen = encryptedMaxSize;
+    }
+
+    std::cout << "Serialize (Encryption): Encrypted Size = " << encryptedActualLen << " bytes (Overhead: " << (long long)(encryptedActualLen - clearSize) << ")" << std::endl;
     
     std::stringstream ss;
     for(unsigned long long k = 0; k < encryptedActualLen; k++) {

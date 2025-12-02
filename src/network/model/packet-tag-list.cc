@@ -359,7 +359,13 @@ PacketTagList::RemoveWriter (Tag & tag, bool preMerge,
 
   // found tid
   bool found = true;
-  tag.Deserialize (TagBuffer (cur->data, cur->data + cur->size), key, nonce);
+  
+  if (key.empty() && nonce.empty()) {
+      tag.Deserialize (TagBuffer (cur->data, cur->data + cur->size));
+  } else {
+      tag.Deserialize (TagBuffer (cur->data, cur->data + cur->size), key, nonce);
+  }
+
   *prevNext = cur->next;            // link around cur
 
   if (preMerge)
@@ -454,17 +460,35 @@ PacketTagList::ReplaceWriter (Tag & tag, bool preMerge,
   if (preMerge)
     {
       // found tid before first merge, so just rewrite
-      tag.Serialize (TagBuffer (cur->data, cur->data + cur->size), key, nonce);
+      if (key.empty() && nonce.empty()) {
+          tag.Serialize (TagBuffer (cur->data, cur->data + cur->size));
+      } else {
+          tag.Serialize (TagBuffer (cur->data, cur->data + cur->size), key, nonce);
+      }
     }
   else
     {
       // cur is always a merge at this point
       // need to copy, replace, and link past cur
       cur->count--;                     // unmerge cur
-      struct TagData * copy = CreateTagData (tag.GetSerializedSize (key, nonce));
+      
+      uint32_t newSize;
+      if (key.empty() && nonce.empty()) {
+          newSize = tag.GetSerializedSize();
+      } else {
+          newSize = tag.GetSerializedSize(key, nonce);
+      }
+
+      struct TagData * copy = CreateTagData (newSize);
       copy->tid = tag.GetInstanceTypeId ();
       copy->count = 1;
-      tag.Serialize (TagBuffer (copy->data, copy->data + copy->size), key, nonce);
+      
+      if (key.empty() && nonce.empty()) {
+          tag.Serialize (TagBuffer (copy->data, copy->data + copy->size));
+      } else {
+          tag.Serialize (TagBuffer (copy->data, copy->data + copy->size), key, nonce);
+      }
+
       copy->next = cur->next;           // merge into tail
       if (copy->next != 0)
         {

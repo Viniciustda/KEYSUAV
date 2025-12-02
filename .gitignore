@@ -37,6 +37,10 @@
 !/src/network/model/tag.h
 !/src/network/model/tag.cc
 
+!/src/wifi/
+!/src/wifi/model/
+!/src/wifi/model/wifi-remote-station-manager.cc
+
 # Manter seu script de simulação em scratch/
 !/scratch/
 !/scratch/flysafe.cc

@@ -96,7 +96,7 @@ NS_LOG_COMPONENT_DEFINE("ScenarioFlySafe_v1");
  * ========================================================================
  */
 
-void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalicious, bool defense) { // Vinicius - MiM - Nov 12, 2025 - Added defense parameter
+void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalicious, bool defense, bool mitigation) { // Vinicius - MiM - Nov 12, 2025 - Added defense parameter
 
   string tracesFolder;
   string scenarioSimFile;
@@ -144,6 +144,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
   fileSim << "Start seed: " << seed << endl << endl;
 
   fileSim << "Security Defenses: " << (defense ? "Enabled" : "Disabled") << endl << endl; // Vinicius - MiM - Nov 12, 2025 - Log defense status
+  fileSim << "Mitigation Mechanism: " << (mitigation ? "Enabled" : "Disabled") << endl << endl; // Vinicius - MiM - Dec 01, 2025 - Log mitigation status
 
   MobilityHelper mobilityUAVs;
 
@@ -360,7 +361,7 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
       SinkApp->Setup(SinkBroadAddress, 1, 6.0); // 1 -> UDP, 2 -> TCP
       //cout << "PacketSink - Configure node " << i << " malicious start time!"  << endl;
     }*/
-    SinkApp->Setup(SinkBroadAddress, 1, 9999.99, defense, 20.0, 115.0); // Vinicius - MiM - All nodes are ordinary / set defense active or not
+    SinkApp->Setup(SinkBroadAddress, 1, 9999.99, defense, mitigation, 20.0, 115.0); // Vinicius - MiM - All nodes are ordinary / set defense active or not
     i++;
   }
 
@@ -549,7 +550,18 @@ void FlySafeSimulation(uint32_t nNodes, string simDate, char runMode, int nMalic
           cout << "Setting node " << snifferNode->GetObject<Ipv4>()->GetAddress(1,0).GetLocal() << " as sniffer!" << endl;           
       } 
   } else {
-      NS_LOG_INFO("FlySafe - No node configured as sniffer (nMalicious = 0).");
+      NS_LOG_INFO("FlySafe - No node configured as sniffer (nMalicious = 0)...");
+  }
+
+  if (defense) {
+      NS_LOG_INFO("FlySafe - Cryptography is ENABLED...");
+  } else {
+      NS_LOG_INFO("FlySafe - Cryptography is DISABLED...");
+  }
+  if (mitigation) {
+      NS_LOG_INFO("FlySafe - Mitigation mechanisms are ENABLED...");
+  } else {
+      NS_LOG_INFO("FlySafe - Mitigation mechanisms are DISABLED...");
   }
 
   //Network Animation using NetAnim.
@@ -613,6 +625,7 @@ int main(int argc, char *argv[]) {
   char runMode;
   int nMalicious;
   bool defense = true; // Vinicius - MiM - Nov 12, 2025 - Defense mechanisms enabled by default
+  bool mitigation = true; // Vinicius - MiM - Dec 01, 2025 - Mitigation mechanisms enabled by default
   
   
   set<char> runModeSet = {'R','M'};
@@ -628,6 +641,7 @@ int main(int argc, char *argv[]) {
   cmd.AddValue("runMode", "Mode of simulation execution", runMode);
   cmd.AddValue("nMalicious", "Number of malicious nodes", nMalicious);
   cmd.AddValue("defense", "Enable or disable security defenses (default: true)", defense); // Vinicius - MiM - Nov 12, 2025
+  cmd.AddValue("mitigation", "Enable or disable mitigation mechanisms (default: true)", mitigation); // Vinicius - MiM - Dec 01, 2025
   cmd.Parse(argc, argv);
 
   if (nNodes < 2 ) {
@@ -659,7 +673,7 @@ int main(int argc, char *argv[]) {
 
   cout << "Start of simulation: " << simTime.c_str() << endl;
 
-  FlySafeSimulation(nNodes, simTime, runMode, nMalicious, defense); // Vinicius - MiM - Nov 12, 2025 - Added defense parameter
+  FlySafeSimulation(nNodes, simTime, runMode, nMalicious, defense, mitigation); // Vinicius - MiM - Nov 12, 2025 - Added defense parameter
 
   cout << "End of simulation: " << GetTimeOfSimulationStart().c_str() << endl;
   //Create2DPlotFile();

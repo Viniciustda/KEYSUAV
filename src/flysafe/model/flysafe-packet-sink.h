@@ -33,7 +33,7 @@ public:
   static TypeId GetTypeId(void);
   FlySafePacketSink();
   virtual ~FlySafePacketSink();
-  void Setup(Address addressTo, uint32_t protocolId, double maliciousTime, bool defense, double maxSpeed, double maxCoverage);  // Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
+  void Setup(Address addressTo, uint32_t protocolId, double maliciousTime, bool defense, bool mitigation, double maxSpeed, double maxCoverage);  // Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
                                                                                                                                 // Vinicius - MiM - Nov 26, 2025 - Mitigating MiM
   /**
   * @brief Struct to store infos from a neighbor node
@@ -160,14 +160,18 @@ private:
    * 
    * @date Nov 26, 2025
    * 
-   * @brief Verify anomaly
+   * @brief Verify anomaly in message received from neighbor node
    * 
+   * * @param tagValue
    * @param neighborIP
    * @param reportedPos
    * @param msgTime
-   * @param myPos
+   * @param distDiference
+   * @param timeNow
+   * 
+   * @return true if anomaly detected, false otherwise
    */
-  bool CheckAnomaly(Ipv4Address neighborIP, Vector reportedPos, double msgTime,  double distDiference, double timeNow);
+  bool CheckAnomaly(uint8_t tagValue, Ipv4Address neighborIP, Vector reportedPos, double msgTime,  double distDiference, double timeNow);
 
 //}
 
@@ -191,6 +195,7 @@ private:
   Address m_node;                 //!< Application node address
   Ipv4Address m_nodeIP;           //!< Node's IPv4 Address
   bool m_defense;                 //!< True if defense mechanism is active  -  Vinicius - MiM - Nov 14, 2025 - Set defense mechanism
+  bool m_mitigation;              //!< True if mitigation mechanism is active  -  Vinicius - MiM - Dec 01, 2025 - Set mitigation mechanism
 
   /** 
    * @author Vinicius - MiM

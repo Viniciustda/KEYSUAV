@@ -2,9 +2,9 @@
 
 # --- Configurações ---
 # Número total de vezes que a simulação será executada.
-TOTAL_RUNS=3
+TOTAL_RUNS=5
 # O comando exato da simulação. Coloque entre aspas.
-SIM_COMMAND="./waf --run \"scratch/flysafe.cc -nNodes=40 -runMode=R -nMalicious=1 -defense=false\" > result.txt"
+SIM_COMMAND="./waf --run \"scratch/flysafe.cc -nNodes=40 -runMode=R -nMalicious=1 -defense=true -mitigation=true\" > result.txt"
 # Pasta onde os traços são salvos.
 TRACES_DIR="flysafe_traces"
 
