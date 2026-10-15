@@ -162,7 +162,7 @@ private:
    * 
    * @brief Verify anomaly in message received from neighbor node
    * 
-   * * @param tagValue
+   * @param tagValue
    * @param neighborIP
    * @param reportedPos
    * @param msgTime
