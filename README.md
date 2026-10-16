@@ -11,6 +11,8 @@ Praia do Forte/BA. Anais [...]. Porto Alegre: Sociedade Brasileira de Computa√ß√
 DOI: https://doi.org/10.5753/sbrc.2026.19890. 
 ```
 
+**DOI:** [10.5753/sbrc.2026.19890](https://doi.org/10.5753/sbrc.2026.19890)
+
 This repository contains the implementation of the Man in the Middle attack on FlySafe using the NS-3 network simulator.
 
 ## Environment Configuration
